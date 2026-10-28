@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Práctica{% endblock %}
+{% block content %}
+<div class="app">
+  <header class="topbar">
+    <div class="tabs" role="tablist" aria-label="Modo de práctica">
+      <button class="tab" role="tab" id="tab-interview" data-mode="interview" aria-selected="false">
+        <svg class="icon"><use href="#i-briefcase"/></svg>Entrevista
+      </button>
+      <button class="tab" role="tab" id="tab-grammar" data-mode="grammar" aria-selected="false">
+        <svg class="icon"><use href="#i-pen"/></svg>Gramática
+      </button>
+    </div>
+    <div class="topbar-actions">
+      <button class="session-pill" id="session-pill" type="button" aria-controls="panel" aria-expanded="false" hidden>
+        <svg class="icon"><use href="#i-chart"/></svg><span id="session-pill-text">Sesión</span>
+      </button>
+      <button class="btn btn-quiet" id="new-session" type="button" hidden>
+        <svg class="icon"><use href="#i-refresh"/></svg><span class="new-label">Nueva sesión</span>
+      </button>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Cambiar tema">
+        <svg class="icon"><use id="theme-icon" href="#i-moon"/></svg>
+      </button>
+      <div class="account">
+        <button class="account-btn" id="account-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="account-menu">
+          <span class="avatar">{{ user.username|first }}</span><span class="account-name">{{ user.username }}</span>
+          <svg class="icon" style="width:14px;height:14px"><use href="#i-chevron"/></svg>
+        </button>
+        <div class="menu" id="account-menu" hidden>
+          <div class="menu-section">
+            <label class="menu-label" for="voice-pref">Reconocimiento de voz</label>
+            <select id="voice-pref">
+              <option value="cloud">Navegador (recomendado)</option>
+              <option value="local">En mi dispositivo (beta)</option>
+            </select>
+            <div class="menu-note" id="voice-note"></div>
+            <button class="btn btn-ghost" id="voice-install" type="button" hidden>Descargar español para mi dispositivo</button>
+          </div>
+          <div class="menu-section">
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button class="menu-item" type="submit"><svg class="icon"><use href="#i-logout"/></svg>Cerrar sesión</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <main class="conversation">
+      <div class="scroll" id="scroll">
+        <section class="welcome" id="welcome" hidden>
+          <h1>¿Qué quieres practicar hoy?</h1>
+          <p>Elige un modo. Puedes cambiar cuando quieras desde las pestañas de arriba.</p>
+          <div class="mode-cards">
+            <button class="mode-card" type="button" data-start="interview">
+              <span class="feature-icon"><svg class="icon"><use href="#i-briefcase"/></svg></span>
+              <strong>Practicar una entrevista</strong>
+              <span>Preguntas según el puesto y retroalimentación de cada respuesta.</span>
+            </button>
+            <button class="mode-card" type="button" data-start="grammar">
+              <span class="feature-icon"><svg class="icon"><use href="#i-pen"/></svg></span>
+              <strong>Corregir mi español</strong>
+              <span>Escribe o dicta un texto y ve tus errores explicados.</span>
+            </button>
+          </div>
+        </section>
+        <div class="column" id="messages" aria-live="polite"></div>
+      </div>
+
+      <div class="composer-wrap" id="composer-wrap" hidden>
+        <div class="column">
+          <div>
+            <div class="suggestions" id="suggestions"></div>
+            <form class="composer" id="composer">
+              <label class="sr-only" for="input">Tu mensaje</label>
+              <textarea id="input" rows="1" placeholder="Escribe tu mensaje…"></textarea>
+              <div class="composer-bar">
+                <span class="composer-status hint" id="status">Enter para enviar · Shift + Enter para salto de línea</span>
+                <div class="composer-actions">
+                  <button class="mic-btn" id="mic" type="button" aria-label="Dictar por voz">
+                    <svg class="icon" style="width:20px;height:20px"><use id="mic-icon" href="#i-mic"/></svg>
+                  </button>
+                  <button class="send-btn" id="send" type="submit" aria-label="Enviar">
+                    <svg class="icon" style="width:20px;height:20px;stroke-width:2"><use href="#i-send"/></svg>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="panel" id="panel" aria-label="Resumen de la sesión" hidden>
+      <button class="icon-btn panel-close" id="panel-close" type="button" aria-label="Cerrar resumen">
+        <svg class="icon"><use href="#i-x"/></svg>
+      </button>
+      <div id="panel-body"></div>
+    </aside>
+  </div>
+</div>
+{{ initial_state|json_script:"initial-state" }}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'ui/chat.js' %}"></script>
+{% endblock %}

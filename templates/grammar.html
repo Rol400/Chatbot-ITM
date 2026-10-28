@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Gramática{% endblock %}
+{% block content %}
+{% include "partials/appnav.html" with active="grammar" %}
+<main class="wrap" style="padding-top:28px;padding-bottom:40px;display:flex;flex-wrap:wrap;gap:24px">
+  <section style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px">
+      <div>
+        <span class="eyebrow blue">Modo gramática</span>
+        <h1 class="display" style="margin:10px 0 0;font-size:34px">Revisa tu texto</h1>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-light btn-sm" id="g-mic" type="button"><svg class="icon" style="width:15px;height:15px"><use href="#i-mic"/></svg><span>Dictar</span></button>
+        <button class="btn btn-light btn-sm" id="g-exercise" type="button">Dame un ejercicio</button>
+      </div>
+    </div>
+
+    <div class="card editor" id="editor">
+      <label class="sr-only" for="g-text">Texto a revisar</label>
+      <textarea id="g-text" maxlength="4000" placeholder="Escribe o pega un texto: un correo a un cliente, un reporte de una falla, tu respuesta a «háblame de ti»…"></textarea>
+      <div class="review" id="g-review" hidden aria-live="polite"></div>
+      <div class="popover" id="g-pop" role="dialog" aria-label="Detalle del error" hidden>
+        <span class="type-chip" id="pop-type"></span>
+        <div style="font-size:17px"><span id="pop-wrong" style="text-decoration:line-through;color:var(--faint)"></span> → <strong id="pop-right"></strong></div>
+        <p id="pop-exp" style="margin:0;font-size:14px;color:var(--ink-2)"></p>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-dark btn-sm" id="pop-apply" type="button" style="flex:1">Aplicar</button>
+          <button class="btn btn-light btn-sm" id="pop-ignore" type="button" style="flex:1">Ignorar</button>
+        </div>
+      </div>
+      <div class="editor-foot">
+        <span class="muted" style="font-size:13px" id="g-status">0 palabras</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-light btn-sm" id="g-edit" type="button" hidden>Editar texto</button>
+          <button class="btn btn-blue" id="g-check" type="button">Revisar texto</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside style="flex:1 1 300px;display:flex;flex-direction:column;gap:14px">
+    <div id="g-empty" class="panel-blue" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+      <div class="display" style="font-size:20px">¿Cómo funciona?</div>
+      <p style="margin:0;color:#2E3A55;font-size:14px">Escribe o dicta un texto y presiona <strong>Revisar texto</strong>. Cada error se subraya con un color según su tipo; tócalo para ver la regla y corregirlo.</p>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:14px">
+        <span><span class="type-dot" style="background:#C2410C"></span> Gramática</span>
+        <span><span class="type-dot" style="background:#2563EB"></span> Acentos</span>
+        <span><span class="type-dot" style="background:#7C3AED"></span> Ortografía</span>
+        <span><span class="type-dot" style="background:#0F766E"></span> Puntuación</span>
+      </div>
+    </div>
+    <div class="speech" id="g-message" hidden style="text-align:left"></div>
+    <div id="g-result" hidden style="display:flex;flex-direction:column;gap:14px">
+      <div class="panel-blue" style="padding:22px;display:flex;gap:18px;align-items:center">
+        <div class="ring r96" id="g-ring" style="--ring:var(--blue);--track:rgba(37,99,235,.15)" role="img"><div><strong id="g-score">0</strong><span>de 100</span></div></div>
+        <div><div class="display" style="font-size:20px" id="g-label"></div><div style="font-size:14px;color:#2E3A55" id="g-count"></div></div>
+      </div>
+      <div class="card" style="border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-weight:800">Por tipo de error</div>
+        <div id="g-types" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button class="btn btn-dark" id="g-apply-all" type="button" style="margin-top:6px">Aplicar todas las correcciones</button>
+      </div>
+      <div class="card" id="g-tip-box" style="border-radius:20px;padding:18px;display:flex;gap:12px">
+        <svg class="icon" style="color:var(--blue);margin-top:2px"><use href="#i-bulb"/></svg>
+        <span style="font-size:14px;color:var(--ink-2)" id="g-tip"></span>
+      </div>
+      <div class="card" id="g-fillers-box" style="border-radius:20px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"></div>
+    </div>
+  </aside>
+</main>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'ui/common.js' %}"></script>
+<script src="{% static 'ui/voice.js' %}"></script>
+<script src="{% static 'ui/grammar.js' %}"></script>
+{% endblock %}

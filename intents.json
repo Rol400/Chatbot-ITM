@@ -1,0 +1,105 @@
+{
+  "descripcion": "Datos de entrenamiento del modelo propio de intenciones. Cada intención tiene frases de ejemplo. La intención 'otro' agrupa todo lo que NO es un comando (respuestas de entrevista, textos a corregir, peticiones para el modelo de lenguaje) y es importante que tenga muchos ejemplos variados. Después de editar este archivo corre: python chatbot/train.py",
+  "intents": [
+    {
+      "tag": "cambiar_entrevista",
+      "patterns": [
+        "entrevista", "modo entrevista", "cambiar a entrevista", "cambia a modo entrevista",
+        "quiero practicar una entrevista", "practicar entrevista", "practicar una entrevista de trabajo",
+        "entrevista de trabajo", "simular una entrevista", "hazme una entrevista", "quiero una entrevista",
+        "prepararme para una entrevista", "vamos con la entrevista", "pasemos a la entrevista",
+        "ahora quiero entrevista", "mejor entrevista", "ir a entrevista", "activar modo entrevista",
+        "entrevistame", "quiero ensayar una entrevista", "practiquemos entrevista", "modo entrevista laboral",
+        "entrevista laboral", "quiero que me entrevistes"
+      ]
+    },
+    {
+      "tag": "cambiar_gramatica",
+      "patterns": [
+        "gramatica", "modo gramatica", "cambiar a gramatica", "cambia a modo gramatica",
+        "corregir mi gramatica", "quiero que corrijas mi ortografia", "revisar mi ortografia",
+        "correccion gramatical", "modo correccion", "corregir texto", "quiero corregir un texto",
+        "revisar mi redaccion", "mejorar mi español", "pasemos a gramatica", "mejor gramatica",
+        "ahora quiero gramatica", "ir a gramatica", "activar modo gramatica", "ortografia",
+        "quiero mejorar mi ortografia", "corrige mi forma de escribir", "modo ortografia",
+        "ayudame con mi gramatica", "practicar gramatica"
+      ]
+    },
+    {
+      "tag": "reiniciar",
+      "patterns": [
+        "reiniciar", "reinicia", "reinicia la conversacion", "empezar de nuevo", "empezar otra vez",
+        "volver a empezar", "comenzar de nuevo", "nueva sesion", "iniciar nueva sesion", "borrar todo",
+        "reset", "resetear", "de nuevo desde cero", "empecemos de cero", "otra sesion",
+        "quiero empezar otra vez", "reinicia todo", "limpiar el chat", "nueva conversacion"
+      ]
+    },
+    {
+      "tag": "terminar",
+      "patterns": [
+        "terminar", "terminar y calificarme", "ya termine", "califícame", "calificame", "dame mi calificacion",
+        "cual es mi calificacion", "quiero mi calificacion", "finalizar", "finalizar la entrevista",
+        "terminar la entrevista", "terminar sesion", "dame mi resultado", "como me fue", "evaluame",
+        "dame mi evaluacion", "ya acabe", "hasta aqui", "es todo por hoy", "termina la practica",
+        "quiero ver mi puntaje", "cual fue mi puntaje", "dame el resumen final"
+      ]
+    },
+    {
+      "tag": "saludo",
+      "patterns": [
+        "hola", "holi", "hola que tal", "buenas", "buenos dias", "buenas tardes", "buenas noches",
+        "que tal", "hey", "saludos", "como estas", "hola como estas", "que onda", "hola buen dia",
+        "buen dia", "hello", "hi", "hola de nuevo", "ya regrese", "hola otra vez"
+      ]
+    },
+    {
+      "tag": "despedida",
+      "patterns": [
+        "adios", "hasta luego", "nos vemos", "bye", "me voy", "hasta pronto", "hasta mañana",
+        "ya me voy", "chao", "chau", "nos vemos luego", "hasta la proxima", "me tengo que ir",
+        "luego seguimos", "seguimos despues", "bye bye"
+      ]
+    },
+    {
+      "tag": "agradecimiento",
+      "patterns": [
+        "gracias", "muchas gracias", "mil gracias", "te agradezco", "gracias por la ayuda", "gracias!",
+        "muy amable", "gracias por todo", "excelente gracias", "ok gracias", "va gracias", "perfecto gracias",
+        "te lo agradezco", "gracias por tu ayuda"
+      ]
+    },
+    {
+      "tag": "ayuda",
+      "patterns": [
+        "ayuda", "como funciona", "como funciona esto", "que puedo hacer", "que haces", "para que sirves",
+        "instrucciones", "no entiendo como usar esto", "como se usa", "que puedo hacer aqui",
+        "explicame como funciona", "como te uso", "necesito ayuda para usar esto", "menu", "opciones",
+        "que opciones tengo"
+      ]
+    },
+    {
+      "tag": "otro",
+      "patterns": [
+        "desarrollador web", "desarrollador web junior", "contador", "contador publico", "atencion a clientes",
+        "ingeniero industrial", "enfermera", "maestro de primaria", "vendedor", "recepcionista",
+        "analista de datos", "programador", "diseñador grafico", "auxiliar administrativo", "practicante de sistemas",
+        "soporte tecnico", "cajero", "gerente de ventas", "becario de recursos humanos", "mesero",
+        "soy muy responsable", "trabajo bien en equipo", "trabajo en equipo", "tengo dos años de experiencia",
+        "estudie ingenieria en sistemas", "me gusta aprender", "soy puntual", "mi mayor fortaleza es la paciencia",
+        "mi debilidad es que soy perfeccionista", "quiero crecer profesionalmente", "pues este hice una pagina",
+        "hice un proyecto con django", "lo resolvi buscando en internet", "le pregunte a mi jefe",
+        "en mi ultimo trabajo era cajero", "no tengo experiencia todavia", "me veo como lider de proyecto",
+        "porque me gusta la empresa", "porque admiro su trabajo", "salario de quince mil",
+        "dame una pista", "dame un ejemplo", "otra pregunta", "hazme otra pregunta", "siguiente pregunta",
+        "repite la pregunta", "no entendi la pregunta", "quiero responder de nuevo", "como responderias tu",
+        "puedes darme un ejemplo de respuesta", "explicame el ultimo error", "explicame haya", "dame un ejercicio",
+        "por que lleva acento", "cuando se usa haber", "que es una muletilla", "cual es la diferencia entre a ver y haber",
+        "haiga mas tiempo", "aveces no se", "yo sabo nadar", "nosotros fuimos a la escuela ayer", "ahi hay un hombre",
+        "me gusta el cafe", "ojala haya tiempo", "hubieron muchas personas", "dijistes que si", "el lunes voy a ir",
+        "este o sea no se", "mmm pues bueno", "la casa es grande", "voy a estudiar mañana", "ella tiene razon",
+        "si", "no", "claro", "ok", "esta bien", "va", "listo", "de acuerdo", "tal vez", "no se",
+        "si claro", "mas o menos", "creo que si", "a veces", "nunca", "siempre"
+      ]
+    }
+  ]
+}

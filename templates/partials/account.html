@@ -1,0 +1,23 @@
+<div class="account">
+  <button class="avatar" id="account-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="account-menu" aria-label="Cuenta de {{ user.username }}">{{ user.username|first }}</button>
+  <div class="menu" id="account-menu" hidden>
+    <div class="menu-section">
+      <strong>{{ user.username }}</strong>
+    </div>
+    <div class="menu-section">
+      <label class="switch">Leer las preguntas en voz alta <input type="checkbox" id="tts-toggle" checked></label>
+      <label class="label-up" for="voice-pref">Reconocimiento de voz</label>
+      <select id="voice-pref">
+        <option value="cloud">Navegador (recomendado)</option>
+        <option value="local">En mi dispositivo (beta)</option>
+      </select>
+      <div class="menu-note" id="voice-note"></div>
+      <button class="btn btn-light btn-sm" id="voice-install" type="button" hidden>Descargar español para mi dispositivo</button>
+    </div>
+    <div class="menu-section">
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+        <button class="menu-item" type="submit"><svg class="icon"><use href="#i-logout"/></svg>Cerrar sesión</button>
+      </form>
+    </div>
+  </div>
+</div>

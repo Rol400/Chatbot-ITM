@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Reporte de entrevista{% endblock %}
+{% block content %}
+{% include "partials/appnav.html" with active="interview" %}
+<main class="wrap" style="max-width:1100px;padding-top:32px;padding-bottom:48px;display:flex;flex-direction:column;gap:22px">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+    <div>
+      <span class="eyebrow pink">Reporte de entrevista</span>
+      <h1 class="display" style="margin:10px 0 2px;font-size:36px">{{ session.role }}</h1>
+      <div class="muted">{{ session.get_interview_type_display }} · {{ session.get_level_display }} · {{ rows|length }} pregunta{{ rows|length|pluralize }}{% if total_seconds %} · <span data-seconds="{{ total_seconds }}">{{ total_seconds }}</span> respondiendo{% endif %} · {{ session.created_at|date:"j \d\e F"|lower }}</div>
+    </div>
+    <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-light" type="button" onclick="window.print()"><svg class="icon"><use href="#i-download"/></svg>Descargar PDF</button>
+      <a class="btn btn-dark" href="{% url 'interview' %}?nueva=1">Nueva entrevista</a>
+    </div>
+  </div>
+
+  <section style="display:flex;flex-wrap:wrap;gap:18px">
+    <div class="report-hero">
+      <div class="ring r136" style="--deg:{{ degrees }}deg" role="img" aria-label="{{ session.score|floatformat:0 }} de 100"><div><strong>{{ session.score|floatformat:0 }}</strong><span>de 100</span></div></div>
+      <div>
+        <div class="display" style="font-size:26px">{{ label }}</div>
+        {% if summary.summary %}<p style="margin:6px 0 0;color:#D7DBE2">{{ summary.summary }}</p>{% endif %}
+      </div>
+    </div>
+    <div style="flex:1 1 420px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+      <div class="tile {% if weakest == 'claridad' %}weak{% endif %}"><div class="label muted" style="font-size:13px">Claridad{% if weakest == 'claridad' %} · tu punto débil{% endif %}</div><div class="value">{{ metrics.claridad|default_if_none:"—" }}<small>/5</small></div></div>
+      <div class="tile {% if weakest == 'estructura' %}weak{% endif %}"><div class="label muted" style="font-size:13px">Estructura{% if weakest == 'estructura' %} · tu punto débil{% endif %}</div><div class="value">{{ metrics.estructura|default_if_none:"—" }}<small>/5</small></div></div>
+      <div class="tile {% if weakest == 'seguridad' %}weak{% endif %}"><div class="label muted" style="font-size:13px">Seguridad{% if weakest == 'seguridad' %} · tu punto débil{% endif %}</div><div class="value">{{ metrics.seguridad|default_if_none:"—" }}<small>/5</small></div></div>
+      <div class="tile"><div class="label muted" style="font-size:13px">Muletillas</div><div class="value">{{ fillers_total }} <small>en total</small></div></div>
+    </div>
+  </section>
+
+  {% if summary.strengths or summary.improve %}
+  <section class="grid-2">
+    <div class="card box good"><h3><svg class="icon"><use href="#i-check"/></svg>Tus fortalezas</h3><ul>{% for s in summary.strengths %}<li>{{ s }}</li>{% endfor %}</ul></div>
+    <div class="box next"><h3><svg class="icon"><use href="#i-target"/></svg>Qué practicar</h3><ul>{% for s in summary.improve %}<li>{{ s }}</li>{% endfor %}</ul></div>
+  </section>
+  {% endif %}
+
+  <section class="card" style="overflow:hidden">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line)">
+      <h2 class="display" style="margin:0;font-size:20px;font-weight:800">Pregunta por pregunta</h2>
+      {% if rows|length > 1 %}<button class="btn btn-pink btn-sm no-print" id="practice-btn" type="button" data-url="{% url 'api_interview_practice' session.id %}">Practicar las {{ lowest|length }} más bajas</button>{% endif %}
+    </div>
+    {% for row in rows %}
+    <details class="qrow" {% if forloop.first %}open{% endif %}>
+      <summary>
+        <span class="qnum">{{ row.number }}</span>
+        <span style="flex:1;min-width:0"><strong>{{ row.question }}</strong>{% if row.question_type %}<br><span class="muted" style="font-size:13px">{{ row.question_type }}</span>{% endif %}</span>
+        {% if row.duration %}<span class="muted" style="font-size:13px" data-seconds="{{ row.duration }}">{{ row.duration|floatformat:0 }} s</span>{% endif %}
+        <span class="chip score-chip {{ row.tone }}">{{ row.score|default_if_none:"—" }}</span>
+        <svg class="icon" style="color:var(--faint)"><use href="#i-chevron"/></svg>
+      </summary>
+      <div class="qbody">
+        <div class="card" style="border-radius:16px;padding:12px 14px">
+          <div class="label-up" style="margin-bottom:4px">Tu respuesta{% if row.wpm %} · {{ row.wpm }} palabras por minuto{% endif %}</div>
+          <p style="margin:0;font-size:14px;color:var(--ink-2)" data-fillers="{{ row.fillers|join:'|' }}">{{ row.answer }}</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {% if row.improve %}<div class="box next" style="padding:12px 14px;border-radius:16px"><div class="label-up" style="color:var(--pink-ink);margin-bottom:4px">Siguiente mejora</div><p style="margin:0;font-size:14px;color:#3A1D2B">{{ row.improve.0 }}</p></div>{% endif %}
+          {% if row.example %}<div class="example" style="font-size:14px">«{{ row.example }}»</div>{% endif %}
+        </div>
+      </div>
+    </details>
+    {% empty %}
+    <p class="muted" style="padding:22px;margin:0">No hay respuestas evaluadas en esta entrevista.</p>
+    {% endfor %}
+  </section>
+</main>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'ui/common.js' %}"></script>
+<script src="{% static 'ui/voice.js' %}"></script>
+<script>
+  (function () {
+    var App = window.App;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-seconds]'), function (n) { n.textContent = App.formatTime(parseFloat(n.dataset.seconds)); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-fillers]'), function (p) {
+      var fillers = p.dataset.fillers ? p.dataset.fillers.split('|') : [];
+      App.markFillers(p, p.textContent, fillers);
+    });
+    var btn = document.getElementById('practice-btn');
+    if (btn) btn.addEventListener('click', function () {
+      App.cover('Preparando tu práctica…');
+      App.api(btn.dataset.url, {}).then(function (d) { window.location.href = d.navigate; })
+        .catch(function (e) { App.cover(null); App.toast(e.message, true); });
+    });
+    window.addEventListener('beforeprint', function () {
+      Array.prototype.forEach.call(document.querySelectorAll('details.qrow'), function (d) { d.open = true; });
+    });
+  })();
+</script>
+{% endblock %}

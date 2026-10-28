@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Crear cuenta{% endblock %}
+{% block content %}
+<main class="auth">
+  <div class="auth-wrap">
+    <div style="display:flex;justify-content:center">{% include "partials/logos.html" with with_text=True %}</div>
+    <form class="card auth-card" method="post" novalidate>
+      {% csrf_token %}
+      <div>
+        <h1 class="display">Crea tu cuenta</h1>
+        <div class="muted">Tu progreso queda guardado para que sigas practicando.</div>
+      </div>
+      {% if error_message %}<div class="alert" role="alert"><svg class="icon"><use href="#i-alert"/></svg>{{ error_message }}</div>{% endif %}
+      <div class="field"><label for="username">Nombre de usuario</label><input class="input" id="username" name="username" value="{{ username }}" autocomplete="username" required autofocus></div>
+      <div class="field"><label for="email">Correo electrónico <span class="optional">(opcional)</span></label><input class="input" id="email" name="email" type="email" value="{{ email }}" autocomplete="email"></div>
+      <div class="grid-2" style="gap:12px">
+        <div class="field"><label for="password1">Contraseña</label><input class="input" id="password1" name="password1" type="password" autocomplete="new-password" required></div>
+        <div class="field"><label for="password2">Confírmala</label><input class="input" id="password2" name="password2" type="password" autocomplete="new-password" required></div>
+      </div>
+      <button class="btn btn-dark btn-lg" type="submit">Crear cuenta</button>
+    </form>
+    <div class="muted" style="text-align:center;font-size:14px">¿Ya tienes cuenta? <a href="{% url 'login' %}" style="font-weight:700">Inicia sesión</a> · <a href="{% url 'home' %}">Inicio</a></div>
+  </div>
+</main>
+{% endblock %}

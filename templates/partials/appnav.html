@@ -1,0 +1,9 @@
+<nav class="appnav" aria-label="Principal">
+  {% include "partials/logos.html" %}
+  <div class="tabs">
+    <a class="tab" href="{% url 'interview' %}" {% if active == 'interview' %}aria-current="page"{% endif %}><svg class="icon"><use href="#i-briefcase"/></svg>Entrevista</a>
+    <a class="tab" href="{% url 'grammar' %}" {% if active == 'grammar' %}aria-current="page"{% endif %}><svg class="icon"><use href="#i-pen"/></svg>Gramática</a>
+    <a class="tab" href="{% url 'progress' %}" {% if active == 'progress' %}aria-current="page"{% endif %}><svg class="icon"><use href="#i-chart"/></svg><span class="d-only">Mi progreso</span><span class="m-only">Progreso</span></a>
+  </div>
+  {% include "partials/account.html" %}
+</nav>

@@ -1,0 +1,4 @@
+# Solo para reentrenar el modelo de intenciones (python chatbot/train.py).
+# No se necesita para correr ni publicar la página.
+-r requirements.txt
+torch>=2.2

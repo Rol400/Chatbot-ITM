@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Entrevista{% endblock %}
+{% block content %}
+{% include "partials/appnav.html" with active="interview" %}
+
+{# ================= Preparación ================= #}
+<main id="setup-view" class="wrap" style="padding-top:34px;padding-bottom:48px;display:flex;flex-wrap:wrap;gap:28px" {% if state %}hidden{% endif %}>
+  <section style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:22px">
+    <div>
+      <span class="eyebrow pink">Nueva entrevista</span>
+      <h1 class="display" style="margin:12px 0 6px;font-size:40px;line-height:1.1">Prepara tu entrevista</h1>
+      <p class="muted" style="margin:0;font-size:17px">Entre más contexto des, más se parecerán las preguntas a las de la vacante real.</p>
+    </div>
+
+    <form id="setup-form" class="card" style="padding:28px;display:flex;flex-direction:column;gap:22px" novalidate>
+      <div class="field">
+        <label for="role">¿Para qué puesto practicas?</label>
+        <input class="input" id="role" name="role" placeholder="Por ejemplo: Desarrollador web" maxlength="200" required autocomplete="off">
+        <div class="suggestions" aria-label="Puestos sugeridos">
+          {% for r in roles %}<button type="button" data-role="{{ r }}">{{ r }}</button>{% endfor %}
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend class="field-label" style="padding:0;margin-bottom:10px">Tu nivel</legend>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" data-group="level">
+            <button type="button" class="pill" data-value="practicante" aria-pressed="false">Practicante o residente</button>
+            <button type="button" class="pill" data-value="junior" aria-pressed="true">Recién egresado</button>
+            <button type="button" class="pill" data-value="experiencia" aria-pressed="false">Con experiencia</button>
+          </div>
+        </fieldset>
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend class="field-label" style="padding:0;margin-bottom:10px">Número de preguntas</legend>
+          <div style="display:flex;gap:6px" data-group="total">
+            <button type="button" class="pill" style="min-width:52px" data-value="5" aria-pressed="false">5</button>
+            <button type="button" class="pill" style="min-width:52px" data-value="8" aria-pressed="true">8</button>
+            <button type="button" class="pill" style="min-width:52px" data-value="10" aria-pressed="false">10</button>
+          </div>
+        </fieldset>
+      </div>
+
+      <fieldset style="border:0;padding:0;margin:0">
+        <legend class="field-label" style="padding:0;margin-bottom:10px">Tipo de entrevista</legend>
+        <div class="grid-3" data-group="interview_type">
+          <button type="button" class="option-card" data-value="general" aria-pressed="false"><strong>General</strong><span>Experiencia, actitud y motivación</span></button>
+          <button type="button" class="option-card" data-value="tecnica" aria-pressed="false"><strong>Técnica</strong><span>Conceptos y resolución de problemas</span></button>
+          <button type="button" class="option-card" data-value="mixta" aria-pressed="true"><strong>Mixta</strong><span>Un poco de las dos (recomendada)</span></button>
+        </div>
+      </fieldset>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="job_description">Vacante <span class="optional">(opcional)</span></label>
+          <textarea class="textarea" id="job_description" name="job_description" rows="4" maxlength="4000" placeholder="Pega aquí la descripción de la vacante…"></textarea>
+        </div>
+        <div class="field">
+          <span class="field-label">Tu CV <span class="optional">(opcional)</span></span>
+          <label class="dropzone" id="cv-zone">
+            <input type="file" id="cv" name="cv" accept=".pdf,.txt,application/pdf,text/plain">
+            <svg class="icon" style="width:22px;height:22px"><use href="#i-upload"/></svg>
+            <strong id="cv-name">Sube tu CV en PDF</strong>
+            <span class="muted" style="font-size:13px">Las preguntas usarán tu experiencia</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px">
+        <span></span>
+        <button class="btn btn-dark btn-lg" type="submit">Empezar entrevista <svg class="icon"><use href="#i-arrow"/></svg></button>
+      </div>
+    </form>
+  </section>
+
+  <aside style="flex:1 1 300px;display:flex;flex-direction:column;gap:16px">
+    <div class="panel-pink" style="padding:26px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">
+      <div class="orb md" aria-hidden="true"></div>
+      <div>
+        <div class="display" style="font-size:20px">Así será tu sesión</div>
+        <div style="color:#6B4A5A;font-size:14px">Unos 15 a 20 minutos</div>
+      </div>
+      <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;text-align:left;width:100%">
+        <li class="card" style="border:0;border-radius:16px;padding:12px 14px;display:flex;gap:12px"><span class="step-num" style="width:26px;height:26px;border-radius:50%;font-size:13px">1</span><span>El entrevistador lee cada pregunta en voz alta.</span></li>
+        <li class="card" style="border:0;border-radius:16px;padding:12px 14px;display:flex;gap:12px"><span class="step-num" style="width:26px;height:26px;border-radius:50%;font-size:13px">2</span><span>Respondes como en una entrevista real, a tu ritmo.</span></li>
+        <li class="card" style="border:0;border-radius:16px;padding:12px 14px;display:flex;gap:12px"><span class="step-num" style="width:26px;height:26px;border-radius:50%;font-size:13px">3</span><span>Ves qué mejorar y, al final, tu reporte completo.</span></li>
+      </ol>
+    </div>
+    <div class="card" style="border-radius:20px;padding:18px 20px;display:flex;gap:12px">
+      <svg class="icon" style="color:var(--blue);margin-top:2px"><use href="#i-bulb"/></svg>
+      <span style="font-size:14px;color:var(--ink-2)">Usa el método <strong>situación, acción y resultado</strong>: qué pasó, qué hiciste tú y qué se logró. En preguntas técnicas, explica tu razonamiento en voz alta.</span>
+    </div>
+  </aside>
+</main>
+
+{# ================= Sesión ================= #}
+<div id="session-view" {% if not state %}hidden{% endif %}>
+  <header class="session-head">
+    <div style="display:flex;align-items:center;gap:14px;min-width:0">
+      <a class="icon-circle" href="{% url 'progress' %}" aria-label="Salir; tu avance queda guardado"><svg class="icon"><use href="#i-x"/></svg></a>
+      <div style="min-width:0">
+        <div class="label-up">Tu sesión de práctica</div>
+        <div class="display" style="font-weight:800;font-size:18px" id="s-title">Entrevista</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div class="progress-dots" id="s-dots" aria-hidden="true"></div>
+      <span class="eyebrow pink" id="s-count" style="text-transform:none;letter-spacing:0;font-size:13px">Pregunta 1 de 8</span>
+      <button class="btn btn-ghost btn-sm" id="finish-btn" type="button">Terminar</button>
+    </div>
+  </header>
+
+  <main class="session-main">
+    <section class="panel-pink interviewer" id="interviewer" data-orb="idle" aria-label="Entrevistador">
+      <div style="align-self:stretch;display:flex;justify-content:space-between;align-items:center" class="hide-sm">
+        <span class="label-up" style="color:var(--pink-ink)">Entrevistador</span>
+        <button class="btn btn-sm" id="tts-btn" type="button" style="background:rgba(255,255,255,.8);color:var(--ink-2)"><svg class="icon" style="width:15px;height:15px"><use href="#i-speaker"/></svg><span>Voz activada</span></button>
+      </div>
+      <div class="orb-rings big" aria-hidden="true"><div><div class="orb xl"></div></div></div>
+      <div class="speech" id="speech" hidden></div>
+      <div class="orb-state" id="orb-state">
+        <span class="wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
+        <span id="orb-text">Te toca responder</span>
+      </div>
+    </section>
+
+    <section class="workarea">
+      {# ---- Pregunta ---- #}
+      <div id="q-view" style="display:flex;flex-direction:column;gap:16px;flex:1">
+        <div class="card question-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px">
+            <span class="label-up" id="q-label">Pregunta 1</span>
+            <button class="btn btn-sm" id="replay-btn" type="button" style="background:var(--soft);color:var(--ink-2)"><svg class="icon" style="width:14px;height:14px"><use href="#i-replay"/></svg>Repetir</button>
+          </div>
+          <h1 class="question-text" id="q-text" aria-live="polite"></h1>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <label class="display" for="answer" style="font-weight:800">Tu respuesta</label>
+        </div>
+
+        <div class="answer-box" id="answer-box">
+          <textarea id="answer" placeholder="Escribe tu respuesta o presiona «Hablar» para dictarla…" maxlength="4000"></textarea>
+          <div class="answer-foot">
+            <span id="answer-status" class="muted">Tómate unos segundos para pensar antes de responder.</span>
+            <span class="muted" id="answer-hint" style="font-size:13px">Puedes corregir el texto antes de enviarlo</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <div>
+            <button class="btn btn-light btn-sm" id="hint-btn" type="button">Dame una pista</button>
+            <button class="btn btn-light btn-sm" id="other-btn" type="button"><svg class="icon" style="width:15px;height:15px"><use href="#i-skip"/></svg>Otra pregunta</button>
+          </div>
+          <div>
+            <button class="btn btn-light" id="mic-btn" type="button"><svg class="icon"><use href="#i-mic"/></svg><span>Hablar</span></button>
+            <button class="btn btn-dark" id="send-btn" type="button">Enviar respuesta <svg class="icon"><use href="#i-arrow"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      {# ---- Retroalimentación ---- #}
+      <div id="f-view" style="display:flex;flex-direction:column;gap:16px;flex:1" hidden>
+        <div class="card score-card">
+          <div class="ring r120" id="f-ring" role="img"><div><strong id="f-score">0</strong><span>de 100</span></div></div>
+          <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div class="display" style="font-size:24px" id="f-label"></div>
+              <div class="muted" id="f-message"></div>
+            </div>
+            <div class="metrics" id="f-metrics"></div>
+          </div>
+        </div>
+        <div class="grid-2" style="gap:16px">
+          <div class="card box good"><h3><svg class="icon"><use href="#i-check"/></svg>Lo que funcionó</h3><ul id="f-good"></ul></div>
+          <div class="box next"><h3><svg class="icon"><use href="#i-target"/></svg>Siguiente mejora</h3><ul id="f-improve"></ul></div>
+        </div>
+        <div class="card box" id="f-example-box"><h3>Prueba algo así</h3><div class="example" id="f-example"></div></div>
+        <div class="card strip" id="f-strip"></div>
+        <div class="card box" id="f-answer-box"><div class="label-up" style="margin-bottom:6px">Tu respuesta</div><p id="f-answer" style="margin:0;color:var(--ink-2)"></p></div>
+        <div class="actions" style="margin-top:auto">
+          <div><button class="btn btn-light" id="retry-btn" type="button"><svg class="icon"><use href="#i-replay"/></svg>Responder de nuevo</button></div>
+          <div><button class="btn btn-dark" id="next-btn" type="button"><span>Siguiente pregunta</span> <svg class="icon"><use href="#i-arrow"/></svg></button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+{{ state|json_script:"interview-state" }}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'ui/common.js' %}"></script>
+<script src="{% static 'ui/voice.js' %}"></script>
+<script src="{% static 'ui/interview.js' %}"></script>
+{% endblock %}

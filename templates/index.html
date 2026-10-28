@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Practica tu entrevista de trabajo{% endblock %}
+{% block body_class %}white{% endblock %}
+{% block content %}
+<div class="wrap">
+  <nav class="landing-nav" aria-label="Principal">
+    {% include "partials/logos.html" with with_text=True %}
+    <div class="links">
+      <a class="btn btn-ghost btn-sm" href="#como">Cómo funciona</a>
+      {% if user.is_authenticated %}
+        <a class="btn btn-dark" href="{% url 'interview' %}">Ir a practicar</a>
+      {% else %}
+        <a class="btn btn-ghost" href="{% url 'login' %}">Iniciar sesión</a>
+        <a class="btn btn-dark" href="{% url 'register' %}">Crear cuenta</a>
+      {% endif %}
+    </div>
+  </nav>
+</div>
+
+<header class="hero">
+  <span class="eyebrow" style="background:#fff;border:1px solid var(--line-2);text-transform:none;letter-spacing:0;font-size:13px">Para estudiantes y egresados de ingeniería · Gratis</span>
+  <h1 class="display">Aprende a expresar<br><span class="gradient-text">todo lo que sabes.</span></h1>
+  <p>Saber mucho no sirve si no lo puedes comunicar. Practica en voz alta y por escrito con retroalimentación al instante: entrevistas de trabajo, exposiciones y textos profesionales.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a class="btn btn-blue btn-lg" href="{% if user.is_authenticated %}{% url 'interview' %}?nueva=1{% else %}{% url 'register' %}{% endif %}">Practicar una entrevista <svg class="icon"><use href="#i-arrow"/></svg></a>
+    <a class="btn btn-light btn-lg" href="{% if user.is_authenticated %}{% url 'grammar' %}{% else %}{% url 'login' %}{% endif %}">Mejorar cómo me expreso</a>
+  </div>
+  <div class="hero-checks"><span>✓ Habla con más seguridad</span><span>✓ Elimina tus muletillas</span><span>✓ Escribe sin errores</span></div>
+
+  <div class="preview" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px">
+      <div><div class="label-up" style="font-size:11px">Tu sesión de práctica</div><div class="display" style="font-weight:800">Entrevista para Desarrollador web</div></div>
+      <span class="eyebrow pink" style="text-transform:none;letter-spacing:0;font-size:13px">Pregunta 3 de 8</span>
+    </div>
+    <div class="grid-2" style="grid-template-columns:1fr 1.6fr">
+      <div class="panel-pink" style="border-radius:22px;min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+        <div class="orb md"></div>
+        <span class="orb-state" style="padding:8px 14px;font-size:14px">Te está escuchando</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card" style="border:0;border-radius:18px;padding:18px 20px;font-family:var(--display);font-weight:800;font-size:21px;line-height:1.3">¿Qué harías si una página carga lento solo para algunos usuarios?</div>
+        <div style="flex:1;background:#fff;border:2px solid var(--pink);border-radius:18px;padding:14px 18px;display:flex;flex-direction:column;justify-content:space-between;gap:10px">
+          <span style="color:var(--ink-2)">Primero revisaría desde dónde se conectan y las métricas del servidor, para ver si es la red o la consulta a la base de datos<span style="color:var(--faint)">…</span></span>
+          <span class="rec" style="font-size:13px">Escuchando · 00:31</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="wrap section" style="display:flex;flex-wrap:wrap;gap:48px;align-items:center">
+  <div style="flex:1 1 440px">
+    <span class="eyebrow pink">El problema</span>
+    <h2 class="display">Saber mucho no basta si no lo puedes explicar.</h2>
+    <p class="muted" style="margin:0 0 22px;font-size:17px">A muchos ingenieros les cuesta expresarse en una entrevista, una exposición o un correo importante. No es falta de conocimiento: es falta de práctica con alguien que te diga qué mejorar.</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:14px"><span style="width:34px;height:34px;flex:none;border-radius:10px;background:var(--pink-soft);color:#BE185D;display:flex;align-items:center;justify-content:center;font-weight:900">✕</span><span><strong>Leer consejos no es practicar</strong><br><span class="muted" style="font-size:15px">Las listas de tips no te dicen si tu respuesta convence o si te entienden.</span></span></div>
+      <div style="display:flex;gap:14px"><span style="width:34px;height:34px;flex:none;border-radius:10px;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:900">✓</span><span><strong>Practica en voz alta, con retroalimentación</strong><br><span class="muted" style="font-size:15px">Hablas o escribes, y ves al instante tu claridad, tu estructura y tus muletillas.</span></span></div>
+    </div>
+  </div>
+  <div style="flex:1 1 420px;border-radius:28px;background:#F3F4F6;padding:32px">
+    <div class="card" style="border:0;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:10px">
+      <div class="label-up" style="color:var(--faint)">Lista típica de práctica</div>
+      <div style="background:var(--page);border-radius:12px;padding:12px 14px;color:var(--muted)">1 · Háblame de ti.</div>
+      <div style="background:var(--page);border-radius:12px;padding:12px 14px;color:var(--muted)">2 · ¿Cuál es tu mayor debilidad?</div>
+      <div style="background:var(--page);border-radius:12px;padding:12px 14px;color:var(--muted)">3 · ¿Dónde te ves en cinco años?</div>
+      <div style="background:#E9EBEF;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;color:var(--ink-2)">Sin contexto del puesto · sin retroalimentación</div>
+    </div>
+  </div>
+</section>
+
+<section id="como" class="section" style="background:#FAFAFB">
+  <div class="wrap" style="text-align:center">
+    <span class="eyebrow blue">Cómo funciona</span>
+    <h2 class="display" style="margin:14px auto 40px;max-width:700px">Tres pasos para comunicarte mejor</h2>
+    <div class="steps">
+      <div class="card" style="padding:24px"><span class="step-num">1</span><h3 style="margin:16px 0 6px;font-weight:800;font-size:21px">Elige qué practicar</h3><p class="muted" style="margin:0">Una entrevista para el puesto que buscas, o un texto o discurso tuyo que quieras mejorar.</p></div>
+      <div class="card" style="padding:24px"><span class="step-num">2</span><h3 style="margin:16px 0 6px;font-weight:800;font-size:21px">Habla o escribe</h3><p class="muted" style="margin:0">Responde en voz alta o por escrito, a tu ritmo. Lo que dictas queda en texto para revisarlo.</p></div>
+      <div class="card" style="padding:24px"><span class="step-num">3</span><h3 style="margin:16px 0 6px;font-weight:800;font-size:21px">Mejora con cada intento</h3><p class="muted" style="margin:0">Calificación, muletillas, errores explicados y tu progreso a lo largo del tiempo.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap section grid-2" style="gap:18px">
+  <div class="panel-pink" style="padding:32px;display:flex;flex-direction:column;gap:14px">
+    <span class="label-up" style="color:var(--pink-ink)">Modo entrevista</span>
+    <h3 class="display" style="margin:0;font-size:30px;line-height:1.12">Un entrevistador que te escucha</h3>
+    <p style="margin:0;color:#4A3340">Preguntas de experiencia, situaciones y conocimientos técnicos del puesto, con retroalimentación al instante.</p>
+    <div class="card" style="margin-top:auto;border:0;border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px"><span class="display" style="font-size:30px">78</span><span style="color:var(--ink-2)">Respuesta sólida · cierra con el resultado que lograste</span></div>
+  </div>
+  <div class="panel-blue" style="padding:32px;display:flex;flex-direction:column;gap:14px">
+    <span class="label-up" style="color:var(--blue-ink)">Modo expresión</span>
+    <h3 class="display" style="margin:0;font-size:30px;line-height:1.12">Habla y escribe con claridad</h3>
+    <p style="margin:0;color:#2E3A55">Dicta lo que dirías en una exposición o escribe un correo o reporte: marca tus muletillas y errores, y te explica cómo mejorar.</p>
+    <div class="card" style="margin-top:auto;border:0;border-radius:18px;padding:16px;font-size:17px;line-height:1.8">Ayer <span class="err t-gramatica" style="cursor:default">hubieron</span> fallas en el servidor, <span class="err t-acentos" style="cursor:default">mas</span> tarde lo reviso.</div>
+  </div>
+</section>
+
+<section class="wrap" style="padding-bottom:80px">
+  <div class="cta-band">
+    <h2 class="display" style="margin:0 0 10px;font-size:clamp(28px,4vw,42px);line-height:1.1">¿Listo para expresarte con más seguridad?</h2>
+    <p style="margin:0 0 26px;color:#DCE7FF;font-size:18px">Para entrevistas, exposiciones y todo lo que tengas que comunicar.</p>
+    <a class="btn btn-light btn-lg" style="color:var(--blue-ink)" href="{% if user.is_authenticated %}{% url 'interview' %}?nueva=1{% else %}{% url 'register' %}{% endif %}">{% if user.is_authenticated %}Empezar una entrevista{% else %}Crear cuenta gratis{% endif %}</a>
+  </div>
+</section>
+
+<footer class="footer">
+  {% include "partials/logos.html" %}
+  <span>Instituto Tecnológico de Mérida · Ingeniería en Sistemas Computacionales · {% now "Y" %}</span>
+</footer>
+{% endblock %}
