@@ -33,21 +33,53 @@ def home(request):
     return render(request, "index.html")
 
 
+LOGIN_FAILS = 5            # intentos fallidos permitidos
+LOGIN_LOCK_SECONDS = 15 * 60
+SIGNUPS_PER_HOUR = 5
+
+
+def client_ip(request):
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    return forwarded.split(",")[0].strip() if forwarded else request.META.get("REMOTE_ADDR", "")
+
+
+def _hit(key, ttl):
+    cache.add(key, 0, ttl)
+    try:
+        return cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, ttl)
+        return 1
+
+
+def _login_keys(request, username):
+    return [f"lf:ip:{client_ip(request)}", f"lf:user:{username.lower()}"]
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("interview")
     error = None
+    username = request.POST.get("username", "").strip()[:150]
     if request.method == "POST":
-        user = auth.authenticate(request, username=request.POST.get("username", "").strip(),
-                                 password=request.POST.get("password", ""))
-        if user is not None:
-            auth.login(request, user)
-            next_url = request.POST.get("next") or request.GET.get("next")
-            if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()}):
-                return redirect(next_url)
-            return redirect("interview")
-        error = "Usuario o contraseña incorrectos."
-    return render(request, "login.html", {"error_message": error, "username": request.POST.get("username", "")})
+        keys = _login_keys(request, username)
+        if any((cache.get(k) or 0) >= LOGIN_FAILS for k in keys):
+            error = "Demasiados intentos. Espera 15 minutos e inténtalo de nuevo."
+        else:
+            user = auth.authenticate(request, username=username, password=request.POST.get("password", ""))
+            if user is not None:
+                cache.delete(keys[1])
+                auth.login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+                next_url = request.POST.get("next") or request.GET.get("next")
+                if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()},
+                                                                require_https=request.is_secure()):
+                    return redirect(next_url)
+                return redirect("interview")
+            for k in keys:
+                _hit(k, LOGIN_LOCK_SECONDS)
+            error = "Usuario o contraseña incorrectos."
+    return render(request, "login.html", {"error_message": error, "username": username,
+                                          "google_enabled": settings.GOOGLE_LOGIN_ENABLED})
 
 
 def register_view(request):
@@ -59,8 +91,12 @@ def register_view(request):
         email = request.POST.get("email", "").strip()
         password1 = request.POST.get("password1", "")
         password2 = request.POST.get("password2", "")
-        if not username:
+        if (cache.get(f"su:{client_ip(request)}") or 0) >= SIGNUPS_PER_HOUR:
+            error = "Se crearon muchas cuentas desde esta red. Inténtalo más tarde."
+        elif not username:
             error = "Escribe un nombre de usuario."
+        elif len(username) > 150 or not username.replace("_", "").replace(".", "").replace("-", "").isalnum():
+            error = "El usuario solo puede tener letras, números, punto, guion y guion bajo."
         elif User.objects.filter(username__iexact=username).exists():
             error = "Ese nombre de usuario ya existe."
         elif password1 != password2:
@@ -72,10 +108,24 @@ def register_view(request):
                 error = " ".join(exc.messages)
             else:
                 user = User.objects.create_user(username, email, password1)
-                auth.login(request, user)
+                _hit(f"su:{client_ip(request)}", 3600)
+                auth.login(request, user, backend="django.contrib.auth.backends.ModelBackend")
                 return redirect("interview")
     return render(request, "register.html", {"error_message": error, "username": request.POST.get("username", ""),
-                                             "email": request.POST.get("email", "")})
+                                             "email": request.POST.get("email", ""),
+                                             "google_enabled": settings.GOOGLE_LOGIN_ENABLED})
+
+
+@login_required
+@require_POST
+def delete_account(request):
+    """Borra la cuenta y todas sus sesiones, mensajes y vínculos con Google."""
+    if request.POST.get("confirm", "").strip().upper() != "ELIMINAR":
+        return redirect("progress")
+    user = request.user
+    auth.logout(request)
+    user.delete()
+    return redirect("home")
 
 
 @require_POST
@@ -296,3 +346,9 @@ def api_transcribe(request):
         return JsonResponse({"error": "No pude transcribir el audio. Intenta de nuevo o escribe tu respuesta."},
                             status=502)
     return JsonResponse({"text": text})
+
+
+def health(request):
+    """Ruta ligera para el servicio que mantiene despierta la página (no toca la base)."""
+    from django.http import HttpResponse
+    return HttpResponse("ok", content_type="text/plain")

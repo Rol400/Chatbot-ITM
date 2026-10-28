@@ -281,3 +281,45 @@ class GrammarTests(ApiTestCase):
     def test_exercise(self):
         with mock.patch.object(llm, "complete_json", return_value=({"text": "Hubieron fallas.", "title": "Reporte"}, "t")):
             self.assertEqual(self.post("/api/gramatica/ejercicio").json(), {"text": "Hubieron fallas.", "title": "Reporte"})
+
+
+from django.core.cache import cache as _cache
+from django.test import override_settings
+
+
+class SecurityTests(TestCase):
+    def setUp(self):
+        _cache.clear()
+        self.user = User.objects.create_user("ana", "ana@x.com", "clave-segura-123")
+
+    def test_login_lockout_after_failures(self):
+        for _ in range(5):
+            self.client.post("/login", {"username": "ana", "password": "mala"})
+        r = self.client.post("/login", {"username": "ana", "password": "clave-segura-123"})
+        self.assertContains(r, "Demasiados intentos")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_login_ok_and_argon2_upgrade(self):
+        r = self.client.post("/login", {"username": "ana", "password": "clave-segura-123"})
+        self.assertEqual(r.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.password.startswith("argon2"))
+
+    def test_open_redirect_blocked(self):
+        r = self.client.post("/login?next=https://malo.com", {"username": "ana", "password": "clave-segura-123"})
+        self.assertEqual(r["Location"], "/entrevista")
+
+    def test_delete_account_requires_confirmation(self):
+        self.client.force_login(self.user)
+        self.client.post("/cuenta/eliminar", {"confirm": "no"})
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+        self.client.post("/cuenta/eliminar", {"confirm": "ELIMINAR"})
+        self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
+
+    def test_short_password_rejected(self):
+        r = self.client.post("/register", {"username": "beto", "password1": "corta123", "password2": "corta123"})
+        self.assertFalse(User.objects.filter(username="beto").exists())
+        self.assertContains(r, "alert")
+
+    def test_google_button_hidden_without_keys(self):
+        self.assertNotContains(self.client.get("/login"), "Continuar con Google")

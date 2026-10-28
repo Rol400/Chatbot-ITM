@@ -349,3 +349,14 @@ mark.filler { background: var(--filler-soft); color: var(--filler); border-radiu
   .qrow summary svg { display: none; }
   details.qrow > .qbody { display: grid !important; }
 }
+
+/* Google y zona de borrado */
+.auth-form{display:flex;flex-direction:column;gap:inherit}
+.btn-google{width:100%;background:#fff;color:#1f1f1f;border:1px solid #DADCE0;gap:10px;justify-content:center}
+.btn-google:hover{background:#F8F9FA}
+.or-sep{display:flex;align-items:center;gap:12px;color:var(--muted,#64748B);font-size:13px}
+.or-sep::before,.or-sep::after{content:"";flex:1;height:1px;background:#E2E8F0}
+.danger-zone{margin-top:6px;font-size:13px}
+.danger-zone summary{cursor:pointer;color:#B91C1C;padding:6px 0}
+.danger-zone form{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.btn-danger{background:#B91C1C;color:#fff;border:0}

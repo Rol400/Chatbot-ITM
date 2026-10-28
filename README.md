@@ -89,6 +89,37 @@ WHISPER_MODEL=whisper-large-v3-turbo
 
 Revisa de vez en cuando https://console.groq.com/docs/deprecations para saber si Groq va a retirar algún modelo.
 
+## Publicar en línea (GitHub + Render + Neon)
+
+1. **Neon** (https://neon.tech): crea un proyecto, región *US East*. Copia la *connection string* (`postgresql://...?sslmode=require`).
+2. **GitHub**: sube el proyecto a un repositorio privado (sin `.env` ni `db.sqlite3`).
+3. **Render** (https://render.com): *New → Blueprint*, elige el repositorio. Render lee `render.yaml` y te pide:
+   - `DATABASE_URL`: la de Neon.
+   - `GROQ_API_KEY` (y `GEMINI_API_KEY` si tienes).
+   `SECRET_KEY` se genera sola. Cada `push` a GitHub vuelve a publicar la página.
+4. **Que no se duerma**: en https://uptimerobot.com crea un monitor *HTTP(s)* a `https://TU-APP.onrender.com/salud` cada 5 minutos.
+   Usa solo un servicio gratis en Render: las 750 horas al mes alcanzan para uno encendido todo el mes.
+5. Para crear un administrador: en Render, pestaña *Shell*, `python manage.py createsuperuser` (en el plan gratis puede no estar; entonces ejecútalo en tu laptop con `DATABASE_URL` de Neon en tu `.env`).
+
+## Iniciar sesión con Google
+
+1. https://console.cloud.google.com → crea un proyecto.
+2. *APIs y servicios → Pantalla de consentimiento de OAuth*: tipo **Externo**, nombre de la app, tu correo. Permisos: solo `email` y `profile`. Publica la app (con esos permisos no pide verificación).
+3. *Credenciales → Crear credenciales → ID de cliente de OAuth* → **Aplicación web**.
+   - Orígenes autorizados: `https://TU-APP.onrender.com` y `http://localhost:8000`
+   - URI de redireccionamiento: `https://TU-APP.onrender.com/cuentas/google/login/callback/` y `http://localhost:8000/cuentas/google/login/callback/`
+4. Copia el ID y el secreto en `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (Render y `.env`). Sin ellas, el botón no aparece.
+
+## Seguridad
+
+- Contraseñas con Argon2 (las viejas se actualizan al iniciar sesión); mínimo 10 caracteres. Con Google no se guarda contraseña ni tokens.
+- 5 intentos fallidos bloquean 15 minutos (por usuario y por red); máximo 5 cuentas nuevas por hora desde la misma red.
+- HTTPS obligatorio, HSTS, cookies seguras, sin iframes, CSRF en todos los formularios.
+- El CV subido solo se usa para el resumen; no se guarda.
+- Cada usuario puede borrar su cuenta y todos sus datos desde su menú.
+- Pon `ADMIN_URL` con una dirección difícil de adivinar.
+- Neon: la conexión va cifrada (`sslmode=require`). La contraseña solo vive en Render y en tu `.env`. Si sospechas algo, en Neon *Roles → Reset password* y actualiza `DATABASE_URL`.
+
 ## Antes de publicar
 
 - `DEBUG=False`, `ALLOWED_HOSTS` con tu dominio y `CSRF_TRUSTED_ORIGINS` con `https://tu-dominio`.

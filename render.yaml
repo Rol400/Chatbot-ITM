@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: chatbot
+    runtime: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: gunicorn django_chatbot.wsgi:application --workers 1 --threads 4 --timeout 120
+    healthCheckPath: /salud
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: ADMIN_URL
+        sync: false

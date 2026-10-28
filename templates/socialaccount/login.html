@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Continuar con Google{% endblock %}
+{% block content %}
+<main class="auth"><div class="auth-wrap"><form class="card auth-card" method="post">{% csrf_token %}
+  <h1 class="display">Continuar con Google</h1>
+  <div class="muted">Te llevaremos a Google para elegir tu cuenta.</div>
+  <button class="btn btn-dark btn-lg" type="submit">Continuar</button>
+  <a class="muted" href="{% url 'login' %}" style="text-align:center">Cancelar</a>
+</form></div></main>
+{% endblock %}

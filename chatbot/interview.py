@@ -96,6 +96,7 @@ def start(user, *, role, level="junior", interview_type="mixta", total=8, answer
                                        temperature=0.6, max_tokens=900)
         session.context_summary = clean_str(raw.get("context_summary"), 900) or ""
         question, question_type = _clean_question(raw)
+    session.cv_text = ""  # el CV solo se usa para el resumen; no se guarda
     session.save()
     _ask(session, question, question_type)
     return session

@@ -18,6 +18,14 @@
       <form method="post" action="{% url 'logout' %}">{% csrf_token %}
         <button class="menu-item" type="submit"><svg class="icon"><use href="#i-logout"/></svg>Cerrar sesión</button>
       </form>
+      <details class="danger-zone">
+        <summary>Eliminar mi cuenta</summary>
+        <form method="post" action="{% url 'delete_account' %}">{% csrf_token %}
+          <p class="menu-note">Se borran tu cuenta, tus entrevistas y tus revisiones. No se puede deshacer.</p>
+          <input class="input" name="confirm" placeholder="Escribe ELIMINAR" autocomplete="off" required pattern="[Ee][Ll][Ii][Mm][Ii][Nn][Aa][Rr]">
+          <button class="btn btn-sm btn-danger" type="submit">Eliminar definitivamente</button>
+        </form>
+      </details>
     </div>
   </div>
 </div>
