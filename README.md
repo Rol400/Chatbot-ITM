@@ -7,7 +7,11 @@ Página en Django para practicar entrevistas de trabajo y corregir la escritura 
 - **Inicio** (`/`): presentación, con los logos del Instituto Tecnológico de Mérida y de Ingeniería en Sistemas Computacionales.
 - **Entrevista** (`/entrevista`): preparación (puesto, nivel, tipo, número de preguntas, vacante y CV opcionales) y luego el simulador: una pregunta a la vez, respuesta por voz o texto, retroalimentación con puntaje de 0 a 100, "Responder de nuevo", "Otra pregunta" y "Siguiente pregunta".
 - **Reporte** (`/reporte/<id>`): calificación final, punto débil, fortalezas, cada pregunta con tu respuesta y su mejora, "Practicar las 2 más bajas" y descarga en PDF (imprimir).
-- **Gramática** (`/gramatica`): editor donde los errores se subrayan por tipo; al tocarlos se ve la regla y se aplica la corrección. Incluye ejercicios de escritura profesional.
+- **Expresión** (`/gramatica`): editor donde los errores se subrayan por tipo; al tocarlos se ve la regla y se aplica la corrección. Después de revisar aparece **Tu plan de práctica** con ejercicios para cada criterio bajo:
+  - Muletillas: encontrarlas en tu texto y hablar un minuto con pausas en silencio.
+  - Ortografía y acentos: mira, cubre, escribe y compara, con repasos mañana, en 3 y en 7 días.
+  - Gramática, puntuación y claridad: oraciones nuevas con tu mismo error, unir oraciones y resumir en una oración.
+  Cada ejercicio muestra en qué estudios se basa (`chatbot/practice.py`).
 - **Mi progreso** (`/progreso`): promedios con tendencia, gráfica de entrevistas, sesiones recientes, errores y muletillas más repetidos.
 
 ## Cómo funciona
@@ -29,6 +33,9 @@ Página en Django para practicar entrevistas de trabajo y corregir la escritura 
 Si Windows muestra "Windows protegió tu PC", elige *Más información* → *Ejecutar de todas formas*.
 
 ## Instalación manual (Windows)
+
+Usa Python 3.12 o superior. Las dependencias de ejecución se fijan mediante
+`requirements.lock`, que `requirements.txt` aplica como restricciones.
 
 Desde la carpeta donde está `manage.py`:
 
@@ -78,6 +85,25 @@ python manage.py test chatbot
 
 No llaman a ninguna API: el modelo de lenguaje se simula.
 
+## Cambios de la revisión de seguridad
+
+Antes de arrancar una instalación existente, ejecuta `python manage.py migrate`:
+la migración `0009` crea los contadores persistentes de intentos y cuotas.
+No depende de la caché para conservar su vencimiento o incrementar sus valores.
+
+`DEBUG` queda desactivado si no se configura; para desarrollo local copia
+`.env.example`, donde está activado. En producción configura una `SECRET_KEY`
+propia y conserva `DEBUG=False`.
+
+`TRUSTED_PROXY_CIDRS` acepta las IP o redes de los proxies de tu despliegue.
+Vacío, ignora `X-Forwarded-For` y usa la IP de conexión. Detrás de Render u otro
+proxy, identifica y configura las redes fiables antes de abrir el servicio:
+de lo contrario varios usuarios podrían compartir el límite de una misma IP.
+No uses `0.0.0.0/0` ni `::/0`. Confirma que el proxy agrega o reemplaza correctamente
+las cabeceras y que el servidor no admite acceso directo fuera de ese proxy.
+
+Consulta `AUDITORIA.md` para los resultados, las limitaciones y los pendientes.
+
 ## Cambiar de modelo
 
 Todo se configura en `.env`, sin tocar código:
@@ -97,7 +123,7 @@ Revisa de vez en cuando https://console.groq.com/docs/deprecations para saber si
    - `DATABASE_URL`: la de Neon.
    - `GROQ_API_KEY` (y `GEMINI_API_KEY` si tienes).
    `SECRET_KEY` se genera sola. Cada `push` a GitHub vuelve a publicar la página.
-4. **Que no se duerma**: en https://uptimerobot.com crea un monitor *HTTP(s)* a `https://TU-APP.onrender.com/salud` cada 5 minutos.
+4. **Que no se duerma**: en https://cron-job.org crea una tarea que visite `https://TU-APP.onrender.com/salud` cada 10 minutos.
    Usa solo un servicio gratis en Render: las 750 horas al mes alcanzan para uno encendido todo el mes.
 5. Para crear un administrador: en Render, pestaña *Shell*, `python manage.py createsuperuser` (en el plan gratis puede no estar; entonces ejecútalo en tu laptop con `DATABASE_URL` de Neon en tu `.env`).
 
@@ -119,6 +145,17 @@ Revisa de vez en cuando https://console.groq.com/docs/deprecations para saber si
 - Cada usuario puede borrar su cuenta y todos sus datos desde su menú.
 - Pon `ADMIN_URL` con una dirección difícil de adivinar.
 - Neon: la conexión va cifrada (`sslmode=require`). La contraseña solo vive en Render y en tu `.env`. Si sospechas algo, en Neon *Roles → Reset password* y actualiza `DATABASE_URL`.
+
+## Recuperar contraseña (Brevo)
+
+Render gratis bloquea el correo por SMTP, así que se envía con la API de Brevo (gratis, sin tarjeta).
+
+1. Crea una cuenta en https://www.brevo.com.
+2. *Senders, Domains & Dedicated IPs → Senders → Add a sender*: tu correo (puede ser Gmail) y confirma el mensaje que te llega.
+3. *SMTP & API → API Keys → Generate a new API key*.
+4. En Render (y en tu `.env` si quieres probar en la laptop): `BREVO_API_KEY`, `EMAIL_FROM` (el remitente verificado) y `EMAIL_FROM_NAME`.
+
+Sin `BREVO_API_KEY`, el correo se imprime en la consola (útil para probar). El enlace vence en 1 hora y se pueden pedir 5 por hora desde la misma red.
 
 ## Antes de publicar
 

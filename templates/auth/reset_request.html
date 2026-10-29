@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Recuperar contraseña{% endblock %}
+{% block content %}
+<main class="auth">
+  <div class="auth-wrap">
+    <div style="display:flex;justify-content:center">{% include "partials/logos.html" with with_text=True chip=True %}</div>
+    <form class="card auth-card" method="post" novalidate>
+      {% csrf_token %}
+      <div>
+        <h1 class="display">Recupera tu contraseña</h1>
+        <div class="muted">Escribe el correo de tu cuenta y te enviamos un enlace para crear una nueva. Vence en 1 hora.</div>
+      </div>
+      {% for error in form.non_field_errors %}<div class="alert" role="alert"><svg class="icon"><use href="#i-alert"/></svg>{{ error }}</div>{% endfor %}
+      {% for error in form.email.errors %}<div class="alert" role="alert"><svg class="icon"><use href="#i-alert"/></svg>{{ error }}</div>{% endfor %}
+      <div class="field"><label for="id_email">Correo electrónico</label><input class="input" id="id_email" name="email" type="email" value="{{ form.email.value|default:'' }}" autocomplete="email" required autofocus></div>
+      <button class="btn btn-dark btn-lg" type="submit">Enviar enlace</button>
+      <p class="muted" style="margin:0;padding:12px 14px;border-radius:12px;background:var(--page);font-size:14px">¿Entras con Google? No necesitas contraseña: usa «Continuar con Google».</p>
+    </form>
+    <div class="muted" style="text-align:center;font-size:14px"><a href="{% url 'login' %}" style="font-weight:700">Volver a iniciar sesión</a></div>
+  </div>
+</main>
+{% endblock %}

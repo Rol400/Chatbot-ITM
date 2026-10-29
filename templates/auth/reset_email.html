@@ -1,0 +1,9 @@
+<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#19202C">
+  <div style="background:#19202C;color:#FFFFFF;border-radius:16px 16px 0 0;padding:20px 24px;font-size:18px;font-weight:bold">Práctica de entrevistas y expresión · ITM</div>
+  <div style="border:1px solid #E3E7EE;border-top:0;border-radius:0 0 16px 16px;padding:24px">
+    <p>Hola, {{ user.get_username }}:</p>
+    <p>Pediste crear una nueva contraseña. El enlace vence en 1 hora.</p>
+    <p style="text-align:center;margin:28px 0"><a href="{{ protocol }}://{{ domain }}{% url 'password_reset_confirm' uidb64=uid token=token %}" style="background:#54CFD2;color:#19202C;padding:14px 26px;border-radius:999px;text-decoration:none;font-weight:bold">Crear nueva contraseña</a></p>
+    <p style="color:#5B6577;font-size:13px">Si no fuiste tú, ignora este correo; tu contraseña no cambia.</p>
+  </div>
+</div>

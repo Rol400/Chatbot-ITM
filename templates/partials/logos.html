@@ -1,4 +1,4 @@
-{% load static %}<a class="logos" href="{% url 'home' %}" aria-label="Inicio">
+{% load static %}<a class="logos{% if chip %} logos-chip{% endif %}" href="https://www.merida.tecnm.mx/" target="_blank" rel="noopener" title="Ir al sitio del Instituto Tecnológico de Mérida">
   <img src="{% static 'ui/logo-itm.png' %}" alt="Instituto Tecnológico de Mérida">
   <span class="divider" aria-hidden="true"></span>
   <img src="{% static 'ui/logo-isc.png' %}" alt="Ingeniería en Sistemas Computacionales">

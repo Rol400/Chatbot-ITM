@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Nueva contraseña{% endblock %}
+{% block content %}
+<main class="auth">
+  <div class="auth-wrap">
+    <div style="display:flex;justify-content:center">{% include "partials/logos.html" with with_text=True chip=True %}</div>
+    {% if validlink %}
+    <form class="card auth-card" method="post" novalidate>
+      {% csrf_token %}
+      <div>
+        <h1 class="display">Crea tu nueva contraseña</h1>
+        <div class="muted">Mínimo 10 caracteres. Al guardarla entras directo.</div>
+      </div>
+      {% for field in form %}{% for error in field.errors %}<div class="alert" role="alert"><svg class="icon"><use href="#i-alert"/></svg>{{ error }}</div>{% endfor %}{% endfor %}
+      <div class="field"><label for="id_new_password1">Nueva contraseña</label><input class="input" id="id_new_password1" name="new_password1" type="password" autocomplete="new-password" required autofocus></div>
+      <div class="field"><label for="id_new_password2">Confírmala</label><input class="input" id="id_new_password2" name="new_password2" type="password" autocomplete="new-password" required></div>
+      <button class="btn btn-blue btn-lg" type="submit">Guardar y entrar</button>
+    </form>
+    {% else %}
+    <div class="card auth-card">
+      <div>
+        <h1 class="display">El enlace ya no sirve</h1>
+        <div class="muted">Venció o ya se usó. Pide uno nuevo; dura 1 hora.</div>
+      </div>
+      <a class="btn btn-dark btn-lg" href="{% url 'password_reset' %}">Pedir otro enlace</a>
+    </div>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

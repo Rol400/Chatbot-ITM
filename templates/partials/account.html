@@ -3,6 +3,18 @@
   <div class="menu" id="account-menu" hidden>
     <div class="menu-section">
       <strong>{{ user.username }}</strong>
+      {% if user.email %}<span class="menu-note">{{ user.email }}</span>{% endif %}
+      {% if user.has_usable_password %}
+      <details class="email-zone" {% if not user.email %}open{% endif %}>
+        <summary>{% if user.email %}Cambiar mi correo{% else %}Agrega tu correo para poder recuperar tu contraseña{% endif %}</summary>
+        <form method="post" action="{% url 'change_email' %}">{% csrf_token %}
+          <input type="hidden" name="back" value="{{ request.get_full_path }}">
+          <input class="input" name="email" type="email" placeholder="tu@correo.com" autocomplete="email" required>
+          <input class="input" name="password" type="password" placeholder="Tu contraseña actual" autocomplete="current-password" required>
+          <button class="btn btn-sm btn-dark" type="submit">Guardar correo</button>
+        </form>
+      </details>
+      {% endif %}
     </div>
     <div class="menu-section">
       <label class="switch">Leer las preguntas en voz alta <input type="checkbox" id="tts-toggle" checked></label>

@@ -87,6 +87,7 @@
     speech.hidden = false;
     speech.className = 'speech' + (message.data && message.data.invalid ? ' warn' : '');
     App.rich(speech, message.text);
+    if (message.data && message.data.invalid) { App.replay(speech, 'shake'); App.replay($('answer-box'), 'shake'); }
     if (message.data && message.data.source === 'intent') {
       speech.appendChild(document.createElement('br'));
       var tag = el('span', 'chip good');
@@ -156,10 +157,10 @@
     var msg = state.feedback, d = msg.data;
     var score = d.score || 0;
     var ring = $('f-ring');
-    ring.style.setProperty('--deg', Math.round(score * 3.6) + 'deg');
-    ring.style.setProperty('--ring', score < 60 ? 'var(--pink)' : 'var(--ink)');
+    ring.style.setProperty('--ring', score < 60 ? 'var(--pink)' : 'var(--blue)');
     ring.setAttribute('aria-label', score + ' de 100');
-    $('f-score').textContent = score;
+    App.fillRing(ring, $('f-score'), score);
+    App.replay($('f-view'), 'cascade');
     $('f-label').textContent = d.label || '';
     $('f-message').textContent = msg.text || '';
     var metrics = $('f-metrics');
@@ -167,7 +168,7 @@
     var sc = d.scores || {};
     metrics.appendChild(metric('Claridad', sc.claridad));
     metrics.appendChild(metric('Estructura', sc.estructura));
-    metrics.appendChild(metric('Seguridad', sc.seguridad));
+    metrics.appendChild(metric('Confianza', sc.seguridad));
     fillList('f-good', (d.feedback || {}).good);
     fillList('f-improve', (d.feedback || {}).improve);
     var example = (d.feedback || {}).example;
@@ -206,6 +207,7 @@
   function micLabel(iconName, text, cls) {
     var btn = $('mic-btn');
     btn.textContent = '';
+    btn.classList.toggle('is-rec', cls === 'stop');
     if (cls === 'stop') btn.appendChild(el('span', 'stop-dot'));
     else btn.appendChild(App.icon(iconName));
     btn.appendChild(el('span', null, text));
@@ -219,7 +221,7 @@
       clearInterval(timerId);
       if (st === 'listening') {
         App.tts.stop();
-        micLabel(null, 'Detener grabación', 'stop');
+        micLabel(null, 'Detener', 'stop');
         orb('listening', 'Te está escuchando');
         var tick = function () {
           var s = $('answer-status');
@@ -277,7 +279,9 @@
       source: !textOverride && voice.added ? 'voice' : 'text',
       duration: Math.round(elapsed > 1 ? elapsed : (Date.now() - shownAt) / 1000)
     };
+    var restore = textOverride ? function () {} : App.busyButton($('send-btn'), 'Evaluando…');
     call('/api/entrevista/responder', body, textOverride ? 'Pensando…' : 'Evaluando tu respuesta…').then(function (data) {
+      restore();
       if (!data) return;
       if (data.kind === 'answer') renderHeader();
       render();

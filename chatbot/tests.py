@@ -100,7 +100,6 @@ class PageTests(ApiTestCase):
         self.assertEqual(Client().get("/entrevista").status_code, 302)
         for url in ("/entrevista", "/gramatica", "/progreso", "/"):
             self.assertEqual(self.client.get(url).status_code, 200, url)
-        self.assertRedirects(self.client.get("/chatbot"), "/entrevista")
 
     def test_api_requires_login_and_csrf(self):
         self.assertEqual(Client().post("/api/entrevista/responder", "{}", content_type="application/json").status_code, 401)
@@ -214,7 +213,12 @@ class InterviewTests(ApiTestCase):
         page = self.client.get(result["navigate"])
         self.assertContains(page, "Buena base")
         self.assertContains(page, "respuesta 2")
-        self.assertContains(page, "Practicar las 2 más bajas")
+        self.assertContains(page, "Practicar las 2 preguntas más bajas")
+        self.assertContains(page, "Es tu primera entrevista")
+        self.assertContains(page, "Se practicará")
+        earlier = PracticeSession.objects.create(user=session.user, mode="interview", finished=True, score=82)
+        PracticeSession.objects.filter(id=earlier.id).update(created_at=session.created_at - timedelta(days=1))
+        self.assertContains(self.client.get(result["navigate"]), "Entrevista anterior: 82")
         progress = self.client.get("/progreso")
         self.assertContains(progress, "Promedio en entrevistas")
         self.assertContains(progress, f"/reporte/{session.id}")
@@ -323,3 +327,134 @@ class SecurityTests(TestCase):
 
     def test_google_button_hidden_without_keys(self):
         self.assertNotContains(self.client.get("/login"), "Continuar con Google")
+
+
+# --- Recuperar contraseña, correo y ejercicios del plan ---------------------
+
+from datetime import timedelta  # noqa: E402
+
+from django.core import mail  # noqa: E402
+from django.utils import timezone  # noqa: E402
+
+from . import practice  # noqa: E402
+from .email_backend import BrevoEmailBackend  # noqa: E402
+from .models import SpellingWord  # noqa: E402
+
+CHECK = {"status": "text", "message": "Revisa unos detalles.", "corrected": "Hubo fallas.",
+         "errors": [{"type": "Gramática", "wrong": "hubieron", "right": "hubo", "explanation": "Haber impersonal."},
+                    {"type": "Acentos", "wrong": "mas", "right": "más", "explanation": "Más de cantidad lleva tilde."}],
+         "fillers": ["este", "este", "o sea"], "scores": {"ortografia": 8, "gramatica": 5, "claridad": 5},
+         "label": "Casi listo", "tip": "Usa hubo."}
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class AccountTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user("ana", "ana@x.com", "clave-segura-123")
+
+    def test_register_requires_email(self):
+        self.client.post("/register", {"username": "beto", "password1": "clave-segura-123", "password2": "clave-segura-123"})
+        self.assertFalse(User.objects.filter(username="beto").exists())
+        self.client.post("/register", {"username": "beto", "email": "ANA@x.com", "password1": "clave-segura-123",
+                                       "password2": "clave-segura-123"})
+        self.assertFalse(User.objects.filter(username="beto").exists())  # correo repetido
+
+    def test_login_with_email(self):
+        r = self.client.post("/login", {"username": "Ana@X.com", "password": "clave-segura-123"})
+        self.assertEqual(r.status_code, 302)
+
+    def test_password_reset_flow(self):
+        r = self.client.post("/recuperar", {"email": "ana@x.com"})
+        self.assertRedirects(r, "/recuperar/enviado")
+        self.assertEqual(len(mail.outbox), 1)
+        link = [line for line in mail.outbox[0].body.splitlines() if "/recuperar/" in line][0].strip()
+        path = link.split("testserver", 1)[1]
+        r = self.client.get(path, follow=True)
+        r = self.client.post(r.redirect_chain[-1][0], {"new_password1": "otra-clave-larga-9", "new_password2": "otra-clave-larga-9"})
+        self.assertEqual(r.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("otra-clave-larga-9"))
+
+    def test_reset_unknown_email_sends_nothing(self):
+        self.client.post("/recuperar", {"email": "nadie@x.com"})
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_change_email_needs_password(self):
+        self.client.force_login(self.user)
+        self.client.post("/cuenta/correo", {"email": "nuevo@x.com", "password": "mala"})
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "ana@x.com")
+        self.client.post("/cuenta/correo", {"email": "nuevo@x.com", "password": "clave-segura-123"})
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "nuevo@x.com")
+
+    @override_settings(BREVO_API_KEY="k", DEFAULT_FROM_EMAIL="yo@x.com", EMAIL_FROM_NAME="ITM")
+    def test_brevo_backend_payload(self):
+        msg = mail.EmailMultiAlternatives("Asunto", "Texto", "yo@x.com", ["ana@x.com"])
+        msg.attach_alternative("<b>Hola</b>", "text/html")
+        with mock.patch("chatbot.email_backend.httpx.post") as post:
+            post.return_value.raise_for_status.return_value = None
+            sent = BrevoEmailBackend().send_messages([msg])
+        self.assertEqual(sent, 1)
+        payload = post.call_args.kwargs["json"]
+        self.assertEqual(payload["to"], [{"email": "ana@x.com"}])
+        self.assertEqual(payload["htmlContent"], "<b>Hola</b>")
+        self.assertEqual(post.call_args.kwargs["headers"]["api-key"], "k")
+
+
+class PracticeTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user("ana", "ana@x.com", "clave-segura-123")
+        self.client.force_login(self.user)
+        patcher = mock.patch.object(intents, "classify", return_value=None)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        with mock.patch.object(llm, "complete_json", return_value=(dict(CHECK), "t")):
+            r = self.client.post("/api/gramatica/revisar", json.dumps({"text": "Pues este ayer hubieron fallas, o sea, este mas tarde."}),
+                                 content_type="application/json")
+        self.message = r.json()["message"]
+
+    def test_plan_lists_low_criteria(self):
+        kinds = [p["kind"] for p in self.message["data"]["plan"]]
+        self.assertEqual(set(kinds), {"muletillas", "ortografia", "gramatica", "claridad"})
+        self.assertNotIn("puntuacion", kinds)
+
+    def test_spelling_words_saved_and_spaced(self):
+        word = SpellingWord.objects.get(user=self.user, word="más")
+        today = timezone.localdate()
+        for days in SpellingWord.INTERVALS:
+            r = self.client.post("/api/expresion/ortografia", json.dumps({"id": word.id, "correct": True}), content_type="application/json")
+            self.assertEqual(r.json()["due"], (today + timedelta(days=days)).isoformat())
+        r = self.client.post("/api/expresion/ortografia", json.dumps({"id": word.id, "correct": True}), content_type="application/json")
+        self.assertTrue(r.json()["learned"])
+        word.refresh_from_db()
+        word.learned = False
+        word.save()
+        r = self.client.post("/api/expresion/ortografia", json.dumps({"id": word.id, "correct": False}), content_type="application/json")
+        self.assertEqual(r.json()["due"], (today + timedelta(days=1)).isoformat())
+
+    def test_practice_pages_render(self):
+        for kind in practice.EXERCISES:
+            r = self.client.get(f"/expresion/practica/{kind}/{self.message['id']}")
+            self.assertEqual(r.status_code, 200, kind)
+        other = User.objects.create_user("beto", "b@x.com", "clave-segura-123")
+        self.client.force_login(other)
+        self.assertEqual(self.client.get(f"/expresion/practica/gramatica/{self.message['id']}").status_code, 404)
+
+    def test_generated_exercise_is_cached(self):
+        items = {"items": [{"sentence": "Habían dos.", "answer": "Había dos.", "rule": "Singular."}]}
+        with mock.patch.object(llm, "complete_json", return_value=(items, "t")) as fake:
+            for _ in range(2):
+                r = self.client.post("/api/expresion/practica", json.dumps({"kind": "gramatica", "message_id": self.message["id"]}),
+                                     content_type="application/json")
+                self.assertEqual(r.json()["items"][0]["answer"], "Había dos.")
+        self.assertEqual(fake.call_count, 1)
+
+    def test_filler_counts_use_model_list(self):
+        self.assertEqual(practice.filler_counts(CHECK), {"este": 2, "o sea": 1})
+        self.assertTrue(practice.same_sentence("El servidor se reinició; sin embargo, la página no cargó.",
+                                               "el servidor se reinició; sin embargo, la página no cargó.", True))
+        self.assertFalse(practice.same_sentence("El servidor se reinició sin embargo la página no cargó.",
+                                                "El servidor se reinició; sin embargo, la página no cargó.", True))

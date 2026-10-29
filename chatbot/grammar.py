@@ -4,7 +4,7 @@ import random
 
 from django.utils import timezone
 
-from . import intents, llm, prompts
+from . import intents, llm, practice, prompts
 from .common import (MAX_INPUT_CHARS, VOICE_PREFIX, average, bot, clamp, clean_list, clean_str, intent_reply,
                      looks_like_assistant, score_label, serialize_message)
 from .models import Message, PracticeSession
@@ -114,6 +114,9 @@ def check(user, text, source="text"):
     data["original"] = text
     if data["status"] == "text":
         locate_errors(text, data["errors"])
+        data["source"] = "voice" if source == "voice" else "text"
+        data["plan"] = practice.build_plan(data)
+        practice.save_spelling_words(user, data)
         msg = bot(session, data.pop("message"), Message.CORRECTION, data)
     else:
         data["invalid"] = True

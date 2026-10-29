@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ exercise.criterion }} · Práctica{% endblock %}
+{% block content %}
+{% include "partials/appnav.html" with active="grammar" %}
+<header class="session-head">
+  <div style="display:flex;align-items:center;gap:14px;min-width:0">
+    <a class="icon-circle" href="{% url 'grammar' %}" aria-label="Volver a tu revisión"><svg class="icon"><use href="#i-arrow-left"/></svg></a>
+    <div style="min-width:0">
+      <div class="label-up" style="color:var(--pink-ink)">Ejercicio · {{ exercise.criterion }}</div>
+      <div class="display" style="font-weight:600;font-size:18px">{{ exercise.title }}</div>
+    </div>
+  </div>
+  <span class="chip" id="p-progress" style="background:var(--blue-soft);color:var(--blue-ink)">{{ exercise.minutes }} min</span>
+</header>
+
+<main class="wrap practice">
+  <section class="practice-main">
+
+    {% if kind == "muletillas" %}
+    <div class="steps-mini" aria-hidden="true"><span class="on" id="m-s1">1 · Encuéntralas</span><span id="m-s2">2 · Habla con pausas</span></div>
+    <div class="card p-card" id="m-step1">
+      <span class="label-up">Paso 1 · 1 minuto</span>
+      <h1 class="display p-title">Toca cada muletilla que encuentres en tu texto</h1>
+      <p class="muted" style="margin:0">Aquí no están marcadas. Encontrarlas tú es lo que entrena tu oído para notarlas cuando hablas.</p>
+      <div class="tap-text" id="m-text"></div>
+      <div class="p-row">
+        <span class="display" style="font-weight:600">Encontraste <span id="m-found" style="color:var(--blue)">0</span> de <span id="m-total">0</span></span>
+        <div class="p-buttons">
+          <button class="btn btn-light btn-sm" id="m-reveal" type="button">Ver las que faltan</button>
+          <button class="btn btn-dark btn-sm" id="m-next" type="button">Siguiente paso <svg class="icon"><use href="#i-arrow"/></svg></button>
+        </div>
+      </div>
+      <div class="p-note" id="m-map"></div>
+    </div>
+
+    <div class="p-dark" id="m-step2" hidden>
+      <span class="label-up" style="color:var(--teal)">Paso 2 · 1 minuto hablando</span>
+      <h2 class="display p-title" style="color:var(--white)">Explica tu proyecto o tu tema. Donde ibas a decir una muletilla, haz una pausa en silencio.</h2>
+      <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap">
+        <button class="mic-round" id="m-mic" type="button" aria-label="Empezar a hablar"><svg class="icon"><use href="#i-mic"/></svg></button>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span class="display" style="font-size:34px;font-weight:700" id="m-time">01:00</span>
+          <span class="breath" id="m-breath"><span class="breath-dot"></span><span id="m-hint">Presiona el micrófono para empezar</span></span>
+        </div>
+      </div>
+      <button class="tap-big" id="m-tap" type="button" disabled>Toca aquí cada vez que notes que dijiste una · <strong id="m-taps">0</strong></button>
+      <label class="sr-only" for="m-transcript">Lo que dijiste</label>
+      <textarea id="m-transcript" class="p-dark-text" rows="3" placeholder="Aquí aparece lo que vas diciendo…" readonly></textarea>
+      <div class="p-compare" id="m-results" hidden>
+        <div><span>Antes</span><strong id="m-before" style="color:var(--pink-light)">0</strong><small> por cada 100 palabras</small></div>
+        <div><span>Ahora</span><strong id="m-after" style="color:var(--teal)">0</strong><small> por cada 100 palabras</small></div>
+      </div>
+      <p id="m-verdict" style="margin:0;color:var(--line-2)" hidden></p>
+      <button class="btn btn-blue" id="m-again" type="button" hidden>Intentar otro minuto</button>
+    </div>
+    {% endif %}
+
+    {% if kind == "ortografia" %}
+    <div class="ccc-steps" aria-hidden="true">
+      <span id="o-s1" class="on">1 · Mira</span><span id="o-s2">2 · Cubre</span><span id="o-s3">3 · Escribe</span><span id="o-s4">4 · Compara</span>
+    </div>
+    <div class="card p-card" id="o-card" style="align-items:center;text-align:center">
+      <span class="muted" id="o-instr" style="font-weight:700">Mira bien la palabra, sobre todo sus tildes.</span>
+      <div class="ccc-word" id="o-word"></div>
+      <div class="field" id="o-field" hidden style="width:100%;max-width:320px">
+        <label for="o-input">Escríbela de memoria</label>
+        <input class="input ccc-input" id="o-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </div>
+      <div class="p-feedback" id="o-feedback" hidden></div>
+      <button class="btn btn-dark" id="o-action" type="button">Ya la vi, tápala</button>
+    </div>
+    <div class="card p-card" id="o-done" hidden style="align-items:center;text-align:center">
+      <span class="ok-pop"><svg class="icon"><use href="#i-check"/></svg></span>
+      <h2 class="display p-title">Terminaste los repasos de hoy</h2>
+      <p class="muted" style="margin:0">Las palabras vuelven en los días que les tocan. Cada acierto las aleja más.</p>
+      <a class="btn btn-dark" href="{% url 'grammar' %}">Volver a mi revisión</a>
+    </div>
+    {% endif %}
+
+    {% if kind == "gramatica" or kind == "puntuacion" %}
+    <div class="card p-card" id="x-card">
+      <div class="seg-progress" id="x-bar" aria-hidden="true"></div>
+      <span class="label-up" id="x-count">Preparando el ejercicio…</span>
+      <h1 class="display p-title">{% if kind == "gramatica" %}Corrige la oración{% else %}Une las oraciones{% endif %}</h1>
+      <p class="muted" style="margin:0">{% if kind == "gramatica" %}Cada oración tiene un error del mismo tipo que los tuyos.{% else %}Junta las oraciones en una sola usando el conector que se indica.{% endif %}</p>
+      <div id="x-prompt" class="x-prompt"><span class="spinner" style="border-color:var(--line);border-top-color:var(--blue)"></span></div>
+      <div class="field">
+        <label for="x-input">{% if kind == "gramatica" %}Escríbela bien{% else %}Tu oración{% endif %}</label>
+        <textarea class="textarea" id="x-input" rows="2" style="min-height:70px" disabled></textarea>
+      </div>
+      <div class="p-feedback" id="x-feedback" hidden></div>
+      <div class="p-row" style="justify-content:flex-end"><button class="btn btn-dark" id="x-action" type="button" disabled>Revisar</button></div>
+    </div>
+    {% endif %}
+
+    {% if kind == "claridad" %}
+    <div class="card p-card" id="c-card">
+      <span class="label-up">Claridad</span>
+      <h1 class="display p-title">Dilo en una sola oración</h1>
+      <p class="muted" style="margin:0">Resume la idea principal de tu texto en {{ payload.summary_limit }} palabras o menos.</p>
+      <details class="p-source"><summary>Ver tu texto original</summary><p id="c-source"></p></details>
+      <div class="field">
+        <label for="c-input">Tu versión</label>
+        <textarea class="textarea" id="c-input" rows="3" style="min-height:90px"></textarea>
+      </div>
+      <div class="p-row"><strong id="c-count" style="color:var(--blue)">0 de {{ payload.summary_limit }} palabras</strong>
+        <button class="btn btn-dark" id="c-action" type="button">Comparar con un modelo</button></div>
+      <div class="p-model" id="c-model" hidden>
+        <span class="label-up" style="color:var(--teal)">Versión modelo</span>
+        <p id="c-model-text" style="margin:0;font-size:17px"></p>
+        <span id="c-tip" style="color:var(--line-2);font-size:14px"></span>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  <aside class="practice-aside">
+    {% if kind == "ortografia" %}
+    <div class="card p-side">
+      <div class="display" style="font-weight:600">Tus palabras de hoy</div>
+      <span class="muted" style="font-size:14px">Salen de los errores de tus textos.</span>
+      <div id="o-list" class="o-list"></div>
+    </div>
+    <div class="p-side p-dark-side">
+      <div class="display" style="font-weight:600">Repasos programados</div>
+      <span style="color:var(--line-2);font-size:14px">Cada palabra vuelve mañana, en 3 días y en 7 días; si fallas, vuelve mañana.</span>
+      <div class="sched" id="o-sched"></div>
+    </div>
+    {% endif %}
+    <div class="card p-side">
+      <div class="display" style="font-weight:600">¿Por qué funciona?</div>
+      <p style="margin:0;color:var(--ink-2);font-size:14px">{{ exercise.why }}</p>
+    </div>
+    <div class="card p-side" style="background:var(--blue-soft);border:0">
+      <div class="display" style="font-weight:600;color:var(--blue-ink)">Practica también por tu cuenta</div>
+      <p style="margin:0;color:var(--ink-2);font-size:14px">{{ exercise.own }}</p>
+    </div>
+    {% if plan|length > 1 %}
+    <div class="card p-side">
+      <div class="display" style="font-weight:600">Más de tu plan</div>
+      {% for item in plan %}{% if item.kind != kind %}
+      <a class="plan-link" href="{% url 'practice' item.kind payload.message_id %}"><span>{{ item.criterion }}</span><svg class="icon"><use href="#i-arrow"/></svg></a>
+      {% endif %}{% endfor %}
+    </div>
+    {% endif %}
+    <details class="card p-side p-sources">
+      <summary>Estudios en los que se basa</summary>
+      <ul>{% for ref in evidence %}<li>{{ ref }}</li>{% endfor %}</ul>
+    </details>
+  </aside>
+</main>
+{{ payload|json_script:"practice-data" }}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'ui/common.js' %}"></script>
+<script src="{% static 'ui/voice.js' %}"></script>
+<script src="{% static 'ui/practice.js' %}"></script>
+{% endblock %}

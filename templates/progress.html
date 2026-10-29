@@ -17,7 +17,7 @@
     <div class="orb md" aria-hidden="true"></div>
     <div style="flex:1;min-width:260px">
       <h2 class="display" style="margin:0 0 6px;font-size:26px">Aún no hay práctica que mostrar</h2>
-      <p style="margin:0;color:#4A3340">Haz tu primera entrevista o revisa un texto y aquí verás cómo vas mejorando.</p>
+      <p style="margin:0;color:var(--ink-2)">Haz tu primera entrevista o revisa un texto y aquí verás cómo vas mejorando.</p>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <a class="btn btn-dark" href="{% url 'interview' %}?nueva=1">Empezar una entrevista</a>
@@ -57,7 +57,7 @@
         {% for r in recent %}
         <a class="list-row" href="{{ r.url }}">
           <span class="muted" style="width:52px;font-size:13px">{{ r.date }}</span>
-          <span class="chip {% if r.mode == 'interview' %}low{% else %}{% endif %}" {% if r.mode != 'interview' %}style="background:var(--blue-soft);color:var(--blue-ink)"{% endif %}>{% if r.mode == 'interview' %}Entrevista{% else %}Gramática{% endif %}</span>
+          <span class="chip {% if r.mode == 'interview' %}low{% else %}{% endif %}" {% if r.mode != 'interview' %}style="background:var(--blue-soft);color:var(--blue-ink)"{% endif %}>{% if r.mode == 'interview' %}Entrevista{% else %}Expresión{% endif %}</span>
           <span style="flex:1;min-width:0">{{ r.detail }}{% if r.status %} <span class="chip mid" style="margin-left:6px">{{ r.status }}</span>{% endif %}</span>
           <strong style="width:40px;text-align:right">{{ r.score|default_if_none:"—" }}</strong>
           <svg class="icon" style="color:var(--faint)"><use href="#i-arrow"/></svg>
@@ -73,7 +73,7 @@
         <h2 class="display" style="margin:0 0 12px;font-weight:800;font-size:18px">Lo que más repites</h2>
         {% for e in errors %}
         <div style="display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:4px 0"><span><strong>{{ e.wrong }}</strong> → {{ e.right }}</span><span class="muted">{{ e.count }}×</span></div>
-        {% empty %}<p class="muted" style="margin:0;font-size:14px">Revisa textos en el modo gramática para ver tus errores frecuentes.</p>{% endfor %}
+        {% empty %}<p class="muted" style="margin:0;font-size:14px">Revisa textos en la sección Expresión para ver tus errores frecuentes.</p>{% endfor %}
       </div>
       <div class="card" style="padding:20px">
         <h2 class="display" style="margin:0 0 12px;font-weight:800;font-size:18px">Muletillas</h2>
@@ -81,9 +81,9 @@
           {% for f in fillers %}<span class="chip filler">{{ f.word }} · {{ f.count }}</span>{% empty %}<span class="muted" style="font-size:14px">Ninguna detectada todavía.</span>{% endfor %}
         </div>
       </div>
-      <div style="border-radius:24px;background:var(--ink);color:#fff;padding:20px;display:flex;flex-direction:column;gap:10px">
+      <div style="border-radius:24px;background:var(--ink);color:var(--white);padding:20px;display:flex;flex-direction:column;gap:10px">
         <div class="display" style="font-weight:800;font-size:18px">Siguiente práctica sugerida</div>
-        <p style="margin:0;color:#D7DBE2;font-size:14px">{{ suggestion }}</p>
+        <p style="margin:0;color:var(--line-2);font-size:14px">{{ suggestion }}</p>
         <a class="btn btn-light btn-sm" style="align-self:flex-start" href="{% url 'interview' %}?nueva=1">Empezar</a>
       </div>
     </aside>

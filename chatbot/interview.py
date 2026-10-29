@@ -78,7 +78,10 @@ def start(user, *, role, level="junior", interview_type="mixta", total=8, answer
     level = level if level in dict(PracticeSession.LEVELS) else "junior"
     interview_type = interview_type if interview_type in dict(PracticeSession.TYPES) else "mixta"
     planned = [q for q in (planned or []) if isinstance(q, str) and q.strip()][:10]
-    total = len(planned) if planned else max(3, min(10, int(total or settings.INTERVIEW_QUESTIONS)))
+    try:
+        total = len(planned) if planned else max(3, min(10, int(total or settings.INTERVIEW_QUESTIONS)))
+    except (TypeError, ValueError, OverflowError):
+        raise InterviewError('El número de preguntas debe ser un entero entre 3 y 10.')
 
     session = PracticeSession(
         user=user, mode=PracticeSession.INTERVIEW, role=role, level=level, interview_type=interview_type,

@@ -1,112 +1,42 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Practica tu entrevista de trabajo{% endblock %}
-{% block body_class %}white{% endblock %}
+{% block title %}Aprende a expresarte{% endblock %}
 {% block content %}
-<div class="wrap">
-  <nav class="landing-nav" aria-label="Principal">
-    {% include "partials/logos.html" with with_text=True %}
-    <div class="links">
-      <a class="btn btn-ghost btn-sm" href="#como">Cómo funciona</a>
-      {% if user.is_authenticated %}
-        <a class="btn btn-dark" href="{% url 'interview' %}">Ir a practicar</a>
-      {% else %}
-        <a class="btn btn-ghost" href="{% url 'login' %}">Iniciar sesión</a>
-        <a class="btn btn-dark" href="{% url 'register' %}">Crear cuenta</a>
-      {% endif %}
-    </div>
-  </nav>
+<link rel="stylesheet" href="{% static 'ui/home.css' %}">
+{% url 'interview' as interview_url %}{% url 'grammar' as grammar_url %}
+<main class="home">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="kb-chalk" x="-5%" y="-30%" width="110%" height="160%"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="9" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.7" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs></svg>
+<div class="kb-board">
+ <nav class="kb-nav" aria-label="Principal">
+  <a class="kb-brand" href="https://www.merida.tecnm.mx/" target="_blank" rel="noopener"><span class="kb-logos"><img src="{% static 'ui/logo-itm.png' %}" alt="Instituto Tecnológico de Mérida"><img src="{% static 'ui/logo-isc.png' %}" alt="Ingeniería en Sistemas Computacionales"></span><span>Instituto Tecnológico<br>de Mérida</span></a>
+  <div class="kb-links"><a href="#como">Cómo funciona</a>{% if user.is_authenticated %}<a class="kb-register" href="{{ interview_url }}">Ir a practicar</a>{% else %}<a href="{% url 'login' %}">Iniciar sesión</a><a class="kb-register" href="{% url 'register' %}">Crear cuenta</a>{% endif %}</div>
+ </nav>
+ <header class="kb-header">
+  <div class="kb-heading"><h1 class="kb-h1">Que tu talento también se <span class="kb-end"><span class="kb-word">escuche<svg viewBox="0 0 240 30" preserveAspectRatio="none" aria-hidden="true"><path d="M4 17 C45 10,95 8,140 11 S210 16,236 9" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="7" stroke-linecap="round" filter="url(#kb-chalk)"/></svg></span>.</span></h1><p class="kb-intro">Responde como en una entrevista real. Te marcamos cada «este», te decimos qué faltó y te enseñamos cómo decirlo.</p></div>
+  <p class="kb-question"><strong>Entrevistador:</strong> «Cuéntame de un error difícil que hayas resuelto.»</p>
+  <section class="kb-ba" aria-label="Ejemplo: de 58 a 85 en la misma pregunta">
+   <figure class="kb-try"><div class="kb-n kb-n1 kb-num">58<span class="sr-only"> de 100</span></div><figcaption>Primer intento</figcaption><blockquote>«Pues <span class="kb-filler">este</span>, la página no cargaba y <span class="kb-filler">o sea</span> revisé varias cosas hasta que ya funcionó.»</blockquote><span class="kb-why">2 muletillas · no dice qué hizo ni qué logró</span></figure>
+   <svg class="kb-draw kb-arrow" viewBox="0 0 140 80" aria-hidden="true"><path pathLength="1" d="M6 48 C40 20,90 18,126 40 M108 24 L128 41 L104 52" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#kb-chalk)"/></svg>
+   <figure class="kb-try kb-good"><div class="kb-score-wrap"><div class="kb-n kb-n2 kb-num">85<span class="sr-only"> de 100</span></div><svg class="kb-draw kb-draw2 kb-circle" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M50 3 C84 3,98 18,96 32 S76 58,48 57 S2 46,4 28 S30 2,60 5" fill="none" stroke="#54CFD2" stroke-width="2" filter="url(#kb-chalk)"/></svg></div><figcaption>Después de practicar</figcaption><blockquote>«En mi proyecto final la página no cargaba productos. Revisé la consola, encontré un permiso faltante en la API y lo corregí; el tiempo de carga bajó a la mitad.»</blockquote><span class="kb-why">Situación, acción y resultado · sin muletillas</span></figure>
+  </section>
+ </header>
+ <div class="kb-actions"><div class="kb-actions-inner">
+  <a class="kb-cta kb-primary" href="{% if user.is_authenticated %}{{ interview_url }}?nueva=1{% else %}{% url 'register' %}?next={{ interview_url|urlencode }}{% endif %}"><svg aria-hidden="true"><use href="#i-briefcase"/></svg>Empezar entrevista</a>
+  <a class="kb-cta" href="{% if user.is_authenticated %}{{ grammar_url }}{% else %}{% url 'register' %}?next={{ grammar_url|urlencode }}{% endif %}"><svg aria-hidden="true"><use href="#i-speak"/></svg>Mejorar cómo me expreso</a>
+  {% if not user.is_authenticated %}<p class="kb-note">Necesitas una cuenta gratuita; crearla toma un minuto.</p>{% endif %}
+ </div></div>
 </div>
-
-<header class="hero">
-  <span class="eyebrow" style="background:#fff;border:1px solid var(--line-2);text-transform:none;letter-spacing:0;font-size:13px">Para estudiantes y egresados de ingeniería · Gratis</span>
-  <h1 class="display">Aprende a expresar<br><span class="gradient-text">todo lo que sabes.</span></h1>
-  <p>Saber mucho no sirve si no lo puedes comunicar. Practica en voz alta y por escrito con retroalimentación al instante: entrevistas de trabajo, exposiciones y textos profesionales.</p>
-  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-    <a class="btn btn-blue btn-lg" href="{% if user.is_authenticated %}{% url 'interview' %}?nueva=1{% else %}{% url 'register' %}{% endif %}">Practicar una entrevista <svg class="icon"><use href="#i-arrow"/></svg></a>
-    <a class="btn btn-light btn-lg" href="{% if user.is_authenticated %}{% url 'grammar' %}{% else %}{% url 'login' %}{% endif %}">Mejorar cómo me expreso</a>
-  </div>
-  <div class="hero-checks"><span>✓ Habla con más seguridad</span><span>✓ Elimina tus muletillas</span><span>✓ Escribe sin errores</span></div>
-
-  <div class="preview" aria-hidden="true">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px">
-      <div><div class="label-up" style="font-size:11px">Tu sesión de práctica</div><div class="display" style="font-weight:800">Entrevista para Desarrollador web</div></div>
-      <span class="eyebrow pink" style="text-transform:none;letter-spacing:0;font-size:13px">Pregunta 3 de 8</span>
-    </div>
-    <div class="grid-2" style="grid-template-columns:1fr 1.6fr">
-      <div class="panel-pink" style="border-radius:22px;min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-        <div class="orb md"></div>
-        <span class="orb-state" style="padding:8px 14px;font-size:14px">Te está escuchando</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div class="card" style="border:0;border-radius:18px;padding:18px 20px;font-family:var(--display);font-weight:800;font-size:21px;line-height:1.3">¿Qué harías si una página carga lento solo para algunos usuarios?</div>
-        <div style="flex:1;background:#fff;border:2px solid var(--pink);border-radius:18px;padding:14px 18px;display:flex;flex-direction:column;justify-content:space-between;gap:10px">
-          <span style="color:var(--ink-2)">Primero revisaría desde dónde se conectan y las métricas del servidor, para ver si es la red o la consulta a la base de datos<span style="color:var(--faint)">…</span></span>
-          <span class="rec" style="font-size:13px">Escuchando · 00:31</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
-
-<section class="wrap section" style="display:flex;flex-wrap:wrap;gap:48px;align-items:center">
-  <div style="flex:1 1 440px">
-    <span class="eyebrow pink">El problema</span>
-    <h2 class="display">Saber mucho no basta si no lo puedes explicar.</h2>
-    <p class="muted" style="margin:0 0 22px;font-size:17px">A muchos ingenieros les cuesta expresarse en una entrevista, una exposición o un correo importante. No es falta de conocimiento: es falta de práctica con alguien que te diga qué mejorar.</p>
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;gap:14px"><span style="width:34px;height:34px;flex:none;border-radius:10px;background:var(--pink-soft);color:#BE185D;display:flex;align-items:center;justify-content:center;font-weight:900">✕</span><span><strong>Leer consejos no es practicar</strong><br><span class="muted" style="font-size:15px">Las listas de tips no te dicen si tu respuesta convence o si te entienden.</span></span></div>
-      <div style="display:flex;gap:14px"><span style="width:34px;height:34px;flex:none;border-radius:10px;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:900">✓</span><span><strong>Practica en voz alta, con retroalimentación</strong><br><span class="muted" style="font-size:15px">Hablas o escribes, y ves al instante tu claridad, tu estructura y tus muletillas.</span></span></div>
-    </div>
-  </div>
-  <div style="flex:1 1 420px;border-radius:28px;background:#F3F4F6;padding:32px">
-    <div class="card" style="border:0;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:10px">
-      <div class="label-up" style="color:var(--faint)">Lista típica de práctica</div>
-      <div style="background:var(--page);border-radius:12px;padding:12px 14px;color:var(--muted)">1 · Háblame de ti.</div>
-      <div style="background:var(--page);border-radius:12px;padding:12px 14px;color:var(--muted)">2 · ¿Cuál es tu mayor debilidad?</div>
-      <div style="background:var(--page);border-radius:12px;padding:12px 14px;color:var(--muted)">3 · ¿Dónde te ves en cinco años?</div>
-      <div style="background:#E9EBEF;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;color:var(--ink-2)">Sin contexto del puesto · sin retroalimentación</div>
-    </div>
-  </div>
+<section id="como" class="kb-how" aria-labelledby="s3-t">
+ <div class="kb-steps"><h2 id="s3-t">Cómo funciona</h2>
+  <button class="s3-step" type="button" aria-pressed="true" aria-controls="home-preview-1" data-step="1"><span class="s3-num">1</span><span><strong>Elige qué practicar</strong><span class="s3-sub">Puesto, nivel y tipo de entrevista</span></span></button>
+  <button class="s3-step" type="button" aria-pressed="false" aria-controls="home-preview-2" data-step="2"><span class="s3-num">2</span><span><strong>Habla o escribe</strong><span class="s3-sub">Como frente a un reclutador</span></span></button>
+  <button class="s3-step" type="button" aria-pressed="false" aria-controls="home-preview-3" data-step="3"><span class="s3-num">3</span><span><strong>Mejora con cada intento</strong><span class="s3-sub">Calificación, muletillas y un ejemplo</span></span></button>
+ </div>
+ <figure class="kb-shot kb-preview s3-view" id="home-preview-1"><img src="{% static 'ui/tour/preparacion.jpg' %}" alt="Pantalla para preparar la entrevista"><figcaption><strong>Prepara tu entrevista.</strong> Escribe el puesto, elige tu nivel y, si quieres, pega la vacante y tu CV.</figcaption></figure>
+ <figure class="kb-shot kb-preview" id="home-preview-2" hidden><img src="{% static 'ui/tour/voz.jpg' %}" alt="Entrevista en curso mientras el estudiante habla" loading="lazy"><figcaption><strong>Responde en voz alta.</strong> El entrevistador lee la pregunta y tu respuesta aparece mientras hablas.</figcaption></figure>
+ <figure class="kb-shot kb-preview" id="home-preview-3" hidden><img src="{% static 'ui/tour/retroalimentacion.jpg' %}" alt="Retroalimentación de una respuesta con su calificación" loading="lazy"><figcaption><strong>Recibe tu retroalimentación.</strong> Calificación, lo que funcionó, la siguiente mejora y un ejemplo de cómo decirlo.</figcaption></figure>
 </section>
-
-<section id="como" class="section" style="background:#FAFAFB">
-  <div class="wrap" style="text-align:center">
-    <span class="eyebrow blue">Cómo funciona</span>
-    <h2 class="display" style="margin:14px auto 40px;max-width:700px">Tres pasos para comunicarte mejor</h2>
-    <div class="steps">
-      <div class="card" style="padding:24px"><span class="step-num">1</span><h3 style="margin:16px 0 6px;font-weight:800;font-size:21px">Elige qué practicar</h3><p class="muted" style="margin:0">Una entrevista para el puesto que buscas, o un texto o discurso tuyo que quieras mejorar.</p></div>
-      <div class="card" style="padding:24px"><span class="step-num">2</span><h3 style="margin:16px 0 6px;font-weight:800;font-size:21px">Habla o escribe</h3><p class="muted" style="margin:0">Responde en voz alta o por escrito, a tu ritmo. Lo que dictas queda en texto para revisarlo.</p></div>
-      <div class="card" style="padding:24px"><span class="step-num">3</span><h3 style="margin:16px 0 6px;font-weight:800;font-size:21px">Mejora con cada intento</h3><p class="muted" style="margin:0">Calificación, muletillas, errores explicados y tu progreso a lo largo del tiempo.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="wrap section grid-2" style="gap:18px">
-  <div class="panel-pink" style="padding:32px;display:flex;flex-direction:column;gap:14px">
-    <span class="label-up" style="color:var(--pink-ink)">Modo entrevista</span>
-    <h3 class="display" style="margin:0;font-size:30px;line-height:1.12">Un entrevistador que te escucha</h3>
-    <p style="margin:0;color:#4A3340">Preguntas de experiencia, situaciones y conocimientos técnicos del puesto, con retroalimentación al instante.</p>
-    <div class="card" style="margin-top:auto;border:0;border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px"><span class="display" style="font-size:30px">78</span><span style="color:var(--ink-2)">Respuesta sólida · cierra con el resultado que lograste</span></div>
-  </div>
-  <div class="panel-blue" style="padding:32px;display:flex;flex-direction:column;gap:14px">
-    <span class="label-up" style="color:var(--blue-ink)">Modo expresión</span>
-    <h3 class="display" style="margin:0;font-size:30px;line-height:1.12">Habla y escribe con claridad</h3>
-    <p style="margin:0;color:#2E3A55">Dicta lo que dirías en una exposición o escribe un correo o reporte: marca tus muletillas y errores, y te explica cómo mejorar.</p>
-    <div class="card" style="margin-top:auto;border:0;border-radius:18px;padding:16px;font-size:17px;line-height:1.8">Ayer <span class="err t-gramatica" style="cursor:default">hubieron</span> fallas en el servidor, <span class="err t-acentos" style="cursor:default">mas</span> tarde lo reviso.</div>
-  </div>
-</section>
-
-<section class="wrap" style="padding-bottom:80px">
-  <div class="cta-band">
-    <h2 class="display" style="margin:0 0 10px;font-size:clamp(28px,4vw,42px);line-height:1.1">¿Listo para expresarte con más seguridad?</h2>
-    <p style="margin:0 0 26px;color:#DCE7FF;font-size:18px">Para entrevistas, exposiciones y todo lo que tengas que comunicar.</p>
-    <a class="btn btn-light btn-lg" style="color:var(--blue-ink)" href="{% if user.is_authenticated %}{% url 'interview' %}?nueva=1{% else %}{% url 'register' %}{% endif %}">{% if user.is_authenticated %}Empezar una entrevista{% else %}Crear cuenta gratis{% endif %}</a>
-  </div>
-</section>
-
-<footer class="footer">
-  {% include "partials/logos.html" %}
-  <span>Instituto Tecnológico de Mérida · Ingeniería en Sistemas Computacionales · {% now "Y" %}</span>
-</footer>
+</main>
 {% endblock %}
+{% block scripts %}<script src="{% static 'ui/home.js' %}" defer></script>{% endblock %}
+

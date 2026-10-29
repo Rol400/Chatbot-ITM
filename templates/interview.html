@@ -78,7 +78,7 @@
       <div class="orb md" aria-hidden="true"></div>
       <div>
         <div class="display" style="font-size:20px">Así será tu sesión</div>
-        <div style="color:#6B4A5A;font-size:14px">Unos 15 a 20 minutos</div>
+        <div style="color:var(--muted);font-size:14px">Unos 15 a 20 minutos</div>
       </div>
       <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;text-align:left;width:100%">
         <li class="card" style="border:0;border-radius:16px;padding:12px 14px;display:flex;gap:12px"><span class="step-num" style="width:26px;height:26px;border-radius:50%;font-size:13px">1</span><span>El entrevistador lee cada pregunta en voz alta.</span></li>
@@ -111,10 +111,10 @@
   </header>
 
   <main class="session-main">
-    <section class="panel-pink interviewer" id="interviewer" data-orb="idle" aria-label="Entrevistador">
+    <section class="interviewer" id="interviewer" data-orb="idle" aria-label="Entrevistador">
       <div style="align-self:stretch;display:flex;justify-content:space-between;align-items:center" class="hide-sm">
-        <span class="label-up" style="color:var(--pink-ink)">Entrevistador</span>
-        <button class="btn btn-sm" id="tts-btn" type="button" style="background:rgba(255,255,255,.8);color:var(--ink-2)"><svg class="icon" style="width:15px;height:15px"><use href="#i-speaker"/></svg><span>Voz activada</span></button>
+        <span class="label-up">Entrevistador</span>
+        <button class="btn btn-sm" id="tts-btn" type="button"><svg class="icon" style="width:15px;height:15px"><use href="#i-speaker"/></svg><span>Voz activada</span></button>
       </div>
       <div class="orb-rings big" aria-hidden="true"><div><div class="orb xl"></div></div></div>
       <div class="speech" id="speech" hidden></div>
@@ -153,7 +153,7 @@
             <button class="btn btn-light btn-sm" id="other-btn" type="button"><svg class="icon" style="width:15px;height:15px"><use href="#i-skip"/></svg>Otra pregunta</button>
           </div>
           <div>
-            <button class="btn btn-light" id="mic-btn" type="button"><svg class="icon"><use href="#i-mic"/></svg><span>Hablar</span></button>
+            <button class="btn btn-mic" id="mic-btn" type="button"><svg class="icon"><use href="#i-mic"/></svg><span>Hablar</span></button>
             <button class="btn btn-dark" id="send-btn" type="button">Enviar respuesta <svg class="icon"><use href="#i-arrow"/></svg></button>
           </div>
         </div>

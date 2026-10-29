@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Revisa tu correo{% endblock %}
+{% block content %}
+<main class="auth">
+  <div class="auth-wrap">
+    <div style="display:flex;justify-content:center">{% include "partials/logos.html" with with_text=True chip=True %}</div>
+    <div class="card auth-card">
+      <span class="sent-icon"><svg class="icon" style="width:28px;height:28px;stroke:var(--blue)"><use href="#i-mail"/></svg></span>
+      <div>
+        <h1 class="display">Te enviamos un enlace</h1>
+        <div class="muted">Si ese correo tiene una cuenta, en unos minutos te llega el mensaje. Revisa también la carpeta de spam.</div>
+      </div>
+      <a class="btn btn-light btn-lg" href="{% url 'login' %}">Volver a iniciar sesión</a>
+    </div>
+  </div>
+</main>
+{% endblock %}

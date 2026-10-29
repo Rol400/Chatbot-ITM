@@ -1,6 +1,7 @@
 """Utilidades compartidas por la entrevista, la gramática y el progreso."""
 import random
 import re
+import math
 
 from django.utils import timezone
 
@@ -25,7 +26,9 @@ def clean_list(value, limit=6):
 def clamp(value, low, high, digits=1):
     try:
         number = float(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not math.isfinite(number):
         return None
     number = max(low, min(high, number))
     return round(number) if digits == 0 else round(number, digits)
@@ -98,9 +101,9 @@ def intent_reply(intent, page):
     tag = intent.tag
     reply = {"message": "", "navigate": None, "action": None}
     if tag == "cambiar_gramatica" and page != "grammar":
-        reply.update(message="Vamos al modo gramática.", navigate="/gramatica")
+        reply.update(message="Vamos a la sección Expresión.", navigate="/gramatica")
     elif tag == "cambiar_entrevista" and page != "interview":
-        reply.update(message="Vamos al modo entrevista.", navigate="/entrevista")
+        reply.update(message="Vamos a la entrevista.", navigate="/entrevista")
     elif tag in ("cambiar_gramatica", "cambiar_entrevista"):
         reply["message"] = "Ya estás en este modo."
     elif tag == "reiniciar":

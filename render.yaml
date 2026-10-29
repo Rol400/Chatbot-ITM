@@ -25,3 +25,9 @@ services:
         sync: false
       - key: ADMIN_URL
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_FROM_NAME
+        value: Práctica ITM

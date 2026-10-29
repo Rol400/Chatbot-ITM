@@ -2,12 +2,19 @@ from django.contrib.auth.models import User
 from django.db import models
 
 
+class RateLimitCounter(models.Model):
+    """Contador persistente; la clave se guarda como hash, sin IP ni correo."""
+    key = models.CharField(max_length=64, primary_key=True)
+    count = models.PositiveIntegerField(default=0)
+    expires_at = models.DateTimeField(db_index=True)
+
+
 class PracticeSession(models.Model):
     """Una sesión de práctica: una entrevista completa o un día de revisión de textos."""
 
     INTERVIEW = "interview"
     GRAMMAR = "grammar"
-    MODES = [(INTERVIEW, "Entrevista"), (GRAMMAR, "Gramática")]
+    MODES = [(INTERVIEW, "Entrevista"), (GRAMMAR, "Expresión")]
 
     LEVELS = [("practicante", "Practicante o residente"), ("junior", "Recién egresado"),
               ("experiencia", "Con experiencia")]
@@ -72,3 +79,27 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender}: {self.text[:60]}"
+
+
+class SpellingWord(models.Model):
+    """Palabra que el usuario escribió mal; se repasa con «mira, cubre, escribe y compara»
+    en días espaciados (hoy, mañana, en 3 días y en 7 días)."""
+
+    INTERVALS = [1, 3, 7]  # días entre repasos después de acertar
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="spelling_words")
+    word = models.CharField(max_length=60)
+    wrong = models.CharField(max_length=60, blank=True)
+    explanation = models.CharField(max_length=400, blank=True)
+    stage = models.PositiveSmallIntegerField(default=0)  # repasos acertados seguidos
+    due = models.DateField()
+    learned = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["user", "word"], name="palabra_unica_por_usuario")]
+        ordering = ["due", "created_at"]
+
+    def __str__(self):
+        return self.word

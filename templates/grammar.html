@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Gramática{% endblock %}
+{% block title %}Expresión{% endblock %}
 {% block content %}
 {% include "partials/appnav.html" with active="grammar" %}
 <main class="wrap" style="padding-top:28px;padding-bottom:40px;display:flex;flex-wrap:wrap;gap:24px">
   <section style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px">
     <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px">
       <div>
-        <span class="eyebrow blue">Modo gramática</span>
+        <span class="eyebrow blue">Modo expresión</span>
         <h1 class="display" style="margin:10px 0 0;font-size:34px">Revisa tu texto</h1>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-light btn-sm" id="g-mic" type="button"><svg class="icon" style="width:15px;height:15px"><use href="#i-mic"/></svg><span>Dictar</span></button>
+        <button class="btn btn-mic btn-sm" id="g-mic" type="button"><svg class="icon" style="width:15px;height:15px"><use href="#i-mic"/></svg><span>Dictar</span></button>
         <button class="btn btn-light btn-sm" id="g-exercise" type="button">Dame un ejercicio</button>
       </div>
     </div>
@@ -37,24 +37,35 @@
         </div>
       </div>
     </div>
+
+    <section class="plan" id="g-plan" hidden aria-label="Tu plan de práctica">
+      <div class="plan-head">
+        <div>
+          <h2 class="display" style="margin:0;font-size:22px;font-weight:700">Tu plan de práctica</h2>
+          <span class="muted" style="font-size:14px">Según tus criterios más bajos. Cada ejercicio usa tus propios errores y toma de 2 a 5 minutos.</span>
+        </div>
+        <span class="chip" style="background:var(--blue-soft);color:var(--blue-ink)">Basado en estudios publicados</span>
+      </div>
+      <div class="plan-grid" id="g-plan-grid"></div>
+    </section>
   </section>
 
   <aside style="flex:1 1 300px;display:flex;flex-direction:column;gap:14px">
     <div id="g-empty" class="panel-blue" style="padding:22px;display:flex;flex-direction:column;gap:12px">
       <div class="display" style="font-size:20px">¿Cómo funciona?</div>
-      <p style="margin:0;color:#2E3A55;font-size:14px">Escribe o dicta un texto y presiona <strong>Revisar texto</strong>. Cada error se subraya con un color según su tipo; tócalo para ver la regla y corregirlo.</p>
+      <p style="margin:0;color:var(--ink-2);font-size:14px">Escribe o dicta un texto y presiona <strong>Revisar texto</strong>. Cada error se subraya con un color según su tipo; tócalo para ver la regla y corregirlo.</p>
       <div style="display:flex;flex-direction:column;gap:6px;font-size:14px">
-        <span><span class="type-dot" style="background:#C2410C"></span> Gramática</span>
-        <span><span class="type-dot" style="background:#2563EB"></span> Acentos</span>
-        <span><span class="type-dot" style="background:#7C3AED"></span> Ortografía</span>
-        <span><span class="type-dot" style="background:#0F766E"></span> Puntuación</span>
+        <span><span class="type-dot t-gramatica"></span> Gramática</span>
+        <span><span class="type-dot t-acentos"></span> Acentos</span>
+        <span><span class="type-dot t-ortografia"></span> Ortografía</span>
+        <span><span class="type-dot t-puntuacion"></span> Puntuación</span>
       </div>
     </div>
     <div class="speech" id="g-message" hidden style="text-align:left"></div>
     <div id="g-result" hidden style="display:flex;flex-direction:column;gap:14px">
       <div class="panel-blue" style="padding:22px;display:flex;gap:18px;align-items:center">
-        <div class="ring r96" id="g-ring" style="--ring:var(--blue);--track:rgba(37,99,235,.15)" role="img"><div><strong id="g-score">0</strong><span>de 100</span></div></div>
-        <div><div class="display" style="font-size:20px" id="g-label"></div><div style="font-size:14px;color:#2E3A55" id="g-count"></div></div>
+        <div class="ring r96" id="g-ring" style="--ring:var(--blue);--track:var(--blue-soft)" role="img"><div><strong id="g-score">0</strong><span>de 100</span></div></div>
+        <div><div class="display" style="font-size:20px" id="g-label"></div><div style="font-size:14px;color:var(--ink-2)" id="g-count"></div></div>
       </div>
       <div class="card" style="border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:10px">
         <div style="font-weight:800">Por tipo de error</div>

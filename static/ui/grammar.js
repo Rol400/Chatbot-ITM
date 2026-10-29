@@ -3,13 +3,14 @@
   'use strict';
 
   var App = window.App, $ = App.$, el = App.el;
+  // Paleta de 4 colores: cada tipo se distingue por color y por estilo de subrayado.
   var TYPES = {
-    'Gramática': { key: 'gramatica', color: '#C2410C', bg: '#FFF1E7', fg: '#9A3412' },
-    'Acentos': { key: 'acentos', color: '#2563EB', bg: '#EEF4FF', fg: '#1D4ED8' },
-    'Ortografía': { key: 'ortografia', color: '#7C3AED', bg: '#F3EEFF', fg: '#6D28D9' },
-    'Puntuación': { key: 'puntuacion', color: '#0F766E', bg: '#E6F6F4', fg: '#0F766E' },
-    'Muletilla': { key: 'muletilla', color: '#9A3412', bg: '#FFE8D6', fg: '#9A3412' },
-    'Estilo': { key: 'estilo', color: '#64748B', bg: '#F1F5F9', fg: '#475569' }
+    'Gramática': { key: 'gramatica', color: '#D6157A', bg: '#FCE8F2', fg: '#A3125F' },
+    'Acentos': { key: 'acentos', color: '#0B7C80', bg: '#E3F7F7', fg: '#075E61' },
+    'Ortografía': { key: 'ortografia', color: '#19202C', bg: '#EEF1F5', fg: '#19202C' },
+    'Puntuación': { key: 'puntuacion', color: '#54CFD2', bg: '#E3F7F7', fg: '#075E61' },
+    'Muletilla': { key: 'muletilla', color: '#A3125F', bg: '#FCE8F2', fg: '#A3125F' },
+    'Estilo': { key: 'estilo', color: '#8A93A1', bg: '#EEF1F5', fg: '#3A4456' }
   };
   var textarea = $('g-text'), review = $('g-review'), pop = $('g-pop');
   var result = null, text = '', fixes = [], activeIndex = null, busy = false, allFixed = false;
@@ -71,8 +72,7 @@
       row.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
       var name = el('span');
       name.style.cssText = 'display:flex;align-items:center;gap:10px';
-      var dot = el('span', 'type-dot');
-      dot.style.background = TYPES[t].color;
+      var dot = el('span', 'type-dot t-' + TYPES[t].key);
       name.appendChild(dot);
       name.appendChild(document.createTextNode(t));
       row.appendChild(name);
@@ -94,9 +94,9 @@
     $('g-empty').hidden = true;
     $('g-result').hidden = false;
     var score = result.score == null ? 0 : result.score;
-    $('g-ring').style.setProperty('--deg', Math.round(score * 3.6) + 'deg');
     $('g-ring').setAttribute('aria-label', score + ' de 100');
-    $('g-score').textContent = score;
+    App.fillRing($('g-ring'), $('g-score'), score);
+    App.replay($('g-result'), 'cascade');
     $('g-label').textContent = result.label || '';
     $('g-tip-box').hidden = !result.tip;
     $('g-tip').textContent = result.tip || '';
@@ -120,6 +120,7 @@
     if (!message) return;
     box.className = 'speech' + (warn ? ' warn' : '');
     App.rich(box, message.text || message);
+    if (warn) { App.replay(box, 'shake'); App.replay($('editor'), 'shake'); }
     if (message.data && message.data.source === 'intent') {
       box.appendChild(document.createElement('br'));
       var tag = el('span', 'chip good', 'Modelo propio · ' + Math.round((message.data.confidence || 0) * 100) + '%');
@@ -127,6 +128,31 @@
       tag.style.marginTop = '6px';
       box.appendChild(tag);
     }
+  }
+
+  /* ---------- Plan de práctica ---------- */
+  function renderPlan(plan, messageId) {
+    var box = $('g-plan'), grid = $('g-plan-grid');
+    grid.textContent = '';
+    box.hidden = !plan.length;
+    plan.forEach(function (item, i) {
+      var card = el('div', 'plan-card' + (i === 0 ? ' first' : ''));
+      var head = el('div', 'p-row');
+      head.appendChild(el('span', 'label-up', item.criterion + (i === 0 ? ' · prioridad' : '')));
+      head.appendChild(el('span', 'muted', item.minutes + ' min'));
+      card.appendChild(head);
+      card.appendChild(el('h3', 'display', item.title));
+      card.appendChild(el('p', null, item.summary));
+      var why = el('details');
+      why.appendChild(el('summary', null, '¿Por qué funciona?'));
+      why.appendChild(document.createTextNode(item.why));
+      card.appendChild(why);
+      var go = el('a', 'btn btn-sm ' + (i === 0 ? 'btn-dark' : 'btn-light'), 'Empezar');
+      go.href = '/expresion/practica/' + item.kind + '/' + messageId;
+      card.appendChild(go);
+      grid.appendChild(card);
+    });
+    if (plan.length) App.replay(grid, 'cascade');
   }
 
   /* ---------- Ventanita de cada error ---------- */
@@ -205,7 +231,11 @@
   function setBusy(on, label) {
     busy = on;
     ['g-check', 'g-exercise', 'g-mic'].forEach(function (id) { $(id).disabled = on; });
-    $('g-check').textContent = on ? (label || 'Revisando…') : 'Revisar texto';
+    var check = $('g-check');
+    check.textContent = '';
+    check.classList.toggle('is-loading', on);
+    if (on) check.appendChild(el('span', 'spinner'));
+    check.appendChild(el('span', null, on ? (label || 'Revisando…') : 'Revisar texto'));
   }
 
   $('g-check').addEventListener('click', function () {
@@ -221,6 +251,7 @@
         var msg = data.message;
         if (data.status === 'text') {
           result = msg.data;
+          renderPlan(result.plan || [], msg.id);
           text = result.original;
           fixes = [];
           allFixed = false;
@@ -256,6 +287,7 @@
     onState: function (st) {
       var btn = $('g-mic');
       btn.textContent = '';
+      btn.classList.toggle('is-rec', st === 'listening');
       if (st === 'listening') { btn.appendChild(el('span', 'stop-dot')); btn.appendChild(el('span', null, 'Detener')); status('Escuchando…'); }
       else { btn.appendChild(App.icon('i-mic', 15)); btn.appendChild(el('span', null, st === 'transcribing' ? 'Transcribiendo…' : 'Dictar')); status(); }
       btn.disabled = st === 'transcribing';

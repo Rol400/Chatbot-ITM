@@ -1,4 +1,6 @@
-Django>=4.2,<6.0
+# Python 3.12 o superior. Actualizar el lock tras repetir pruebas y auditoría.
+-c requirements.lock
+Django>=5.2.18,<6.0
 groq>=0.30
 httpx>=0.27
 python-dotenv>=1.0

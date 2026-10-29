@@ -1,0 +1,7 @@
+Hola, {{ user.get_username }}:
+
+Pediste crear una nueva contraseña. Abre este enlace (vence en 1 hora):
+
+{{ protocol }}://{{ domain }}{% url 'password_reset_confirm' uidb64=uid token=token %}
+
+Si no fuiste tú, ignora este correo; tu contraseña no cambia.

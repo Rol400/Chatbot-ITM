@@ -95,9 +95,53 @@
     if (!node) { node = App.el('div', 'toast'); node.id = 'toast'; node.setAttribute('role', 'status'); document.body.appendChild(node); }
     node.textContent = text;
     node.className = 'toast' + (isError ? ' error' : '');
+    node.hidden = true;
+    void node.offsetWidth; // reinicia la animación de entrada
     node.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { node.hidden = true; }, 6000);
+  };
+
+  /* Reinicia una animación de CSS quitando y volviendo a poner la clase. */
+  App.replay = function (node, cls) {
+    if (!node) return;
+    node.classList.remove(cls);
+    void node.offsetWidth;
+    node.classList.add(cls);
+  };
+
+  /* Anillo de puntaje que se llena y número que cuenta hacia arriba. */
+  App.fillRing = function (ring, scoreNode, score) {
+    ring.style.setProperty('--deg', '0deg');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { ring.style.setProperty('--deg', Math.round(score * 3.6) + 'deg'); });
+    });
+    if (!scoreNode) return;
+    if (reduce) { scoreNode.textContent = score; return; }
+    var start = null, duration = 1000;
+    function step(t) {
+      if (start === null) start = t;
+      var k = Math.min(1, (t - start) / duration);
+      scoreNode.textContent = Math.round(score * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  };
+
+  /* Pone un botón en modo "ocupado" con girito; devuelve una función para restaurarlo. */
+  App.busyButton = function (btn, label) {
+    if (!btn) return function () {};
+    var saved = Array.prototype.slice.call(btn.childNodes);
+    btn.textContent = '';
+    btn.appendChild(App.el('span', 'spinner'));
+    btn.appendChild(App.el('span', null, label));
+    btn.classList.add('is-loading');
+    return function () {
+      btn.textContent = '';
+      saved.forEach(function (n) { btn.appendChild(n); });
+      btn.classList.remove('is-loading');
+    };
   };
 
   App.cover = function (text) {

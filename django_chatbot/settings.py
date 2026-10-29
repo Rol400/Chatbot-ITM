@@ -23,18 +23,20 @@ def env_list(name, default=""):
 
 
 # --- Seguridad -------------------------------------------------------------
-DEBUG = env_bool("DEBUG", True)
+DEBUG = env_bool("DEBUG", False)
 
 SECRET_KEY = os.getenv("SECRET_KEY", "")
 if not SECRET_KEY:
     if DEBUG:
         # Solo para desarrollo local. En producción SECRET_KEY es obligatoria.
-        SECRET_KEY = "dev-only-insecure-key-change-me"
+        from django.core.management.utils import get_random_secret_key
+        SECRET_KEY = get_random_secret_key()
     else:
         raise RuntimeError("Falta SECRET_KEY en el archivo .env")
 
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "")
+TRUSTED_PROXY_CIDRS = env_list('TRUSTED_PROXY_CIDRS', '')
 
 # Render define esta variable con el dominio de la app (xxx.onrender.com).
 RENDER_HOST = os.getenv("RENDER_EXTERNAL_HOSTNAME")
@@ -62,7 +64,7 @@ ADMIN_URL = os.getenv("ADMIN_URL", "admin/").strip("/") + "/"
 
 # --- Aplicaciones ----------------------------------------------------------
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "chatbot.admin_config.ProtectedAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -100,6 +102,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "chatbot.context.account_notice",
             ],
         },
     },
@@ -186,6 +189,16 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {"chatbot": {"handlers": ["console"], "level": "INFO"}},
 }
+
+# --- Correo (recuperar contraseña) -----------------------------------------
+# Con BREVO_API_KEY se envía por la API de Brevo; sin ella, los correos se
+# muestran en la consola (útil en tu laptop).
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+EMAIL_BACKEND = ("chatbot.email_backend.BrevoEmailBackend" if BREVO_API_KEY
+                 else "django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_FROM", "no-responder@example.com")
+EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "Práctica ITM")
+PASSWORD_RESET_TIMEOUT = 60 * 60  # el enlace vence en 1 hora
 
 # --- Inteligencia artificial -----------------------------------------------
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")

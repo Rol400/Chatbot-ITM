@@ -3,6 +3,7 @@ from collections import Counter
 from datetime import timedelta
 
 from django.utils import timezone
+from django.db.models import Prefetch
 
 from .common import average, local_time, score_tone
 from .models import Message, PracticeSession
@@ -63,7 +64,11 @@ def build(user):
              "last": i == len(finished) - 1, "id": s.id} for i, s in enumerate(finished)]
 
     recent = []
-    for s in PracticeSession.objects.filter(user=user).order_by("-created_at")[:8]:
+    recent_sessions = (PracticeSession.objects.filter(user=user).order_by('-created_at')
+                       .prefetch_related(Prefetch('messages',
+                           queryset=Message.objects.filter(kind=Message.CORRECTION).only('session_id', 'data'),
+                           to_attr='recent_corrections'))[:8])
+    for s in recent_sessions:
         if s.mode == PracticeSession.INTERVIEW:
             if not s.questions_asked:
                 continue
@@ -71,7 +76,7 @@ def build(user):
             score = round(s.score) if s.score is not None else None
             url = f"/reporte/{s.id}" if s.finished else "/entrevista"
         else:
-            corrections = [m.data.get("score") for m in s.messages.filter(kind=Message.CORRECTION)]
+            corrections = [m.data.get('score') for m in s.recent_corrections]
             if not corrections:
                 continue
             detail = "1 texto revisado" if len(corrections) == 1 else f"{len(corrections)} textos revisados"

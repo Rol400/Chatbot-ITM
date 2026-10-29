@@ -137,3 +137,28 @@ EXERCISE_TOPICS = [
     "explicación a un usuario de cómo restablecer su contraseña",
     "resumen semanal de avances de un proyecto",
 ]
+
+
+# --- Ejercicios del plan de práctica (sección de expresión) -----------------
+
+PRACTICE_GRAMMAR = """Eres un profesor de español de México. Crea un ejercicio de gramática para un estudiante de ingeniería basado en SUS errores:
+{errors}
+
+Escribe 5 oraciones nuevas, de contexto profesional o de tecnología, que tengan el MISMO tipo de error (no copies sus oraciones). Cada oración tiene exactamente un error.
+Responde SOLO con JSON: {{"items": [{{"sentence": "oración con el error", "answer": "la misma oración corregida, cambiando solo lo necesario", "rule": "la regla en una oración"}}]}}"""
+
+PRACTICE_PUNCTUATION = """Eres un profesor de español de México. Crea un ejercicio de combinación de oraciones para practicar puntuación, para un estudiante de ingeniería. Sus errores de puntuación fueron:
+{errors}
+
+Escribe 4 reactivos. En cada uno da 2 oraciones cortas de contexto profesional o de tecnología y un conector (por ejemplo "sin embargo", "por lo tanto", "aunque", "además", "ya que"). La respuesta es UNA oración que las une con ese conector y la puntuación correcta según la RAE.
+Responde SOLO con JSON: {{"items": [{{"parts": ["oración 1.", "oración 2."], "connector": "conector", "answer": "oración combinada con su puntuación", "rule": "la regla de puntuación en una oración"}}]}}"""
+
+PRACTICE_CLARITY = """Eres un profesor de redacción. Este es un texto de un estudiante de ingeniería:
+<<<{text}>>>
+
+Escribe una versión modelo de su idea principal en UNA sola oración de {limit} palabras o menos, clara y directa, sin agregar datos que no estén en el texto. Agrega un consejo breve sobre qué hace clara a tu versión (por ejemplo, empezar por quién hace qué).
+Responde SOLO con JSON: {{"model": "la oración modelo", "tip": "el consejo en una oración"}}"""
+
+PRACTICE_FILLERS = """Eres un analista del habla. El mensaje del usuario es la transcripción de un minuto hablando en español.
+Lista cada muletilla tal como aparece, una vez por cada aparición: sonidos de relleno ("eh", "em", "mmm") y palabras usadas solo para rellenar ("este", "o sea", "pues", "bueno", "tipo", "¿no?") cuando NO cumplen su función normal. Por ejemplo, "este" en "este sistema" NO es muletilla; "pues" en "pues no funcionaba" puede serlo si solo rellena.
+Responde SOLO con JSON: {"fillers": ["este", "o sea"]}"""
