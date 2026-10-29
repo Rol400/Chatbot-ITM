@@ -74,9 +74,9 @@ exit /b 0
 rem ---------- Funciones y errores ----------
 :find_python
 set "PY="
-for %%V in (313 312 311 310) do if not defined PY if exist "%LocalAppData%\Programs\Python\Python%%V\python.exe" set "PY=%LocalAppData%\Programs\Python\Python%%V\python.exe"
+for %%V in (313 312) do if not defined PY if exist "%LocalAppData%\Programs\Python\Python%%V\python.exe" set "PY=%LocalAppData%\Programs\Python\Python%%V\python.exe"
 if defined PY exit /b 0
-for /f "delims=" %%P in ('py -3 -c "import sys; print(sys.executable if sys.version_info >= (3, 10) else '')" 2^>nul') do set "PY=%%P"
+for /f "delims=" %%P in ('py -3 -c "import sys; print(sys.executable if sys.version_info >= (3, 12) else '')" 2^>nul') do set "PY=%%P"
 if defined PY exit /b 0
 for /f "delims=" %%P in ('python -c "import sys; print(sys.executable if sys.version_info >= (3, 10) else '')" 2^>nul') do set "PY=%%P"
 exit /b 0
