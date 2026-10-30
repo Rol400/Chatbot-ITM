@@ -541,6 +541,27 @@ def api_grammar_exercise(request):
     return JsonResponse(grammar.exercise())
 
 
+# Contexto para Whisper. Funciona como "texto anterior": imita su estilo y reconoce
+# mejor las palabras que aparecen ahí. Las muletillas del ejemplo hacen que las conserve
+# (por defecto las borra), algo necesario para contarlas en entrevista y práctica.
+VOICE_VOCABULARY = ("ITM, Ingeniería en Sistemas Computacionales, residencia profesional, servicio social, "
+                    "Python, Java, JavaScript, SQL, Django, React, API, Git, GitHub, frontend, backend, "
+                    "base de datos")
+VOICE_FILLERS = "Eh, este… pues, o sea, mmm, bueno, la verdad"
+VOICE_CONTEXTS = {"chat", "interview", "practice", "grammar"}
+
+
+def _whisper_prompt(user, context):
+    if context == "grammar":
+        return ("Texto dictado en español de México, con buena ortografía, acentos y puntuación. "
+                f"Términos: {VOICE_VOCABULARY}.")
+    session = _active_interview(user) if context in ("interview", "chat") else None
+    topic = (f"Entrevista de trabajo para {session.role[:120]}." if session and session.role
+             else "Práctica de expresión oral.")
+    return (f"Conversación en español de México. {topic} Términos: {VOICE_VOCABULARY}. "
+            f"{VOICE_FILLERS}, yo trabajé en un proyecto…")
+
+
 @api_view
 def api_transcribe(request):
     audio = request.FILES.get("audio")
@@ -550,13 +571,20 @@ def api_transcribe(request):
         return JsonResponse({"error": "La grabación es demasiado larga."}, status=400)
     if audio.size < MIN_AUDIO_BYTES:
         return JsonResponse({"text": ""})  # demasiado corta: Whisper tiende a inventar texto
+    now = timezone.now()
+    if limits.hit(f"tr:{request.user.id}:h:{now:%Y%m%d%H}", 3600) > settings.TRANSCRIBE_PER_HOUR:
+        return JsonResponse({"error": "Usaste mucho el dictado en la última hora. "
+                                      "Escribe tu respuesta o intenta en un rato."}, status=429)
     mime = (request.POST.get("mime") or audio.content_type or "audio/webm").split(";")[0]
     ext = {"audio/ogg": "ogg", "audio/mp4": "m4a", "audio/mpeg": "mp3", "audio/wav": "wav"}.get(mime, "webm")
-    session = _active_interview(request.user)
-    context = "Conversación en español de México. " + (
-        f"Entrevista de trabajo para {session.role}." if session else "Práctica de expresión oral.")
+    context = request.POST.get("context", "chat")
+    prompt = _whisper_prompt(request.user, context if context in VOICE_CONTEXTS else "chat")
     try:
-        text = llm.transcribe(audio.read(), f"audio.{ext}", mime, prompt=context)
+        text = llm.transcribe(audio.read(), f"audio.{ext}", mime, prompt=prompt)
+    except llm.RateLimited as exc:
+        logger.error("Cuota de audio agotada en todos los modelos: %s", exc)
+        return JsonResponse({"error": "El dictado alcanzó su límite por ahora. "
+                                      "Escribe tu respuesta o intenta en unos minutos."}, status=503)
     except Exception as exc:  # noqa: BLE001
         logger.error("Falló la transcripción: %s", exc)
         return JsonResponse({"error": "No pude transcribir el audio. Intenta de nuevo o escribe tu respuesta."},

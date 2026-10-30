@@ -213,6 +213,10 @@ LLM_CHAIN = env_list(
 LLM_TIMEOUT_SECONDS = int(os.getenv("LLM_TIMEOUT_SECONDS", "40"))
 
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "whisper-large-v3-turbo")
+# Modelos de voz en orden; si el primero se queda sin cuota se usa el siguiente.
+WHISPER_MODELS = env_list("WHISPER_MODELS", f"{WHISPER_MODEL},whisper-large-v3")
+# Transcripciones por usuario por hora (la cuota de audio de Groq es aparte).
+TRANSCRIBE_PER_HOUR = int(os.getenv("TRANSCRIBE_PER_HOUR", "60"))
 
 # Límite de mensajes por usuario para cuidar la cuota gratuita.
 MESSAGES_PER_MINUTE = int(os.getenv("MESSAGES_PER_MINUTE", "12"))

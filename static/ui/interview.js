@@ -215,6 +215,8 @@
 
   var voice = window.Voice.create({
     textarea: answer,
+    context: 'interview',
+    silenceMs: 4000,   // en una entrevista se hacen pausas para pensar
     onState: function (st) {
       $('answer-box').classList.toggle('recording', st === 'listening');
       $('mic-btn').disabled = st === 'transcribing';

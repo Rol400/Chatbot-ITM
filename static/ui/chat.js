@@ -551,8 +551,11 @@
   });
 
   /* ---------- Voz ----------
-     Orden: 1) reconocimiento en el dispositivo (Chrome 139+), 2) reconocimiento del
+     Computadora: 1) reconocimiento en el dispositivo (Chrome 139+), 2) reconocimiento del
      navegador en la nube, 3) grabación + Whisper en el servidor como respaldo.
+     Celular: grabación + Whisper, porque el reconocimiento del navegador en Android repite
+     palabras y llega con retraso (salvo que el español en el dispositivo esté instalado).
+     La grabación se detiene sola tras unos segundos de silencio.
      El texto dictado se queda en el campo para revisarlo antes de enviar. */
 
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -563,9 +566,14 @@
     localLang: 'es-MX',
     mode: 'idle',         // idle | listening | transcribing
     rec: null, recorder: null, stream: null, chunks: [],
-    fallback: false, timer: null, added: false
+    fallback: false, timer: null, silenceTimer: null, watcher: null, starting: false, added: false
   };
   var MAX_SECONDS = 90;
+  var BITRATE = 32000;        // voz en un canal: 32 kbps suena igual y pesa la mitad
+  var SILENCE_MS = 2500;      // silencio tras hablar para detener solo
+  var NO_SPEECH_MS = 8000;    // sin voz desde el inicio: se detiene sin gastar transcripción
+  var IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 
   function setStatus(content, recording) {
     var status = $('status');
@@ -577,6 +585,7 @@
 
   function setMic(mode) {
     voice.mode = mode;
+    voice.starting = false;
     var mic = $('mic');
     mic.classList.toggle('listening', mode === 'listening');
     mic.classList.toggle('busy', mode === 'transcribing');
@@ -594,7 +603,9 @@
       return;
     }
     if (voice.pref === 'cloud') {
-      note.textContent = 'Tu voz se reconoce con el servicio del navegador. Si falla, se graba y se transcribe en el servidor.';
+      note.textContent = IS_MOBILE
+        ? 'En celular tu voz se graba y se transcribe en el servidor al terminar: es más preciso.'
+        : 'Tu voz se reconoce con el servicio del navegador. Si falla, se graba y se transcribe en el servidor.';
       return;
     }
     var messages = {
@@ -649,6 +660,70 @@
     autoresize();
   }
 
+  /* En celulares (sobre todo Chrome en Android) el modo continuo repite el texto ya
+     reconocido en cada resultado nuevo: "hola" + "hola" o "hola" + "hola cómo estás".
+     Si se concatenan tal cual sale "hola hola". Aquí se fusionan sin repetir. */
+  function normSpeech(s) {
+    return s.toLowerCase().replace(/[.,;:¿?¡!"]/g, '').replace(/\s+/g, ' ').trim();
+  }
+  function mergeSpeech(a, b) {
+    var na = normSpeech(a), nb = normSpeech(b);
+    if (!na) return b;
+    if (!nb) return a;
+    if (nb === na || nb.indexOf(na + ' ') === 0) return b;          // b ya trae todo lo de a
+    if (na.indexOf(nb + ' ') === 0 || na.slice(-(nb.length + 1)) === ' ' + nb) return a; // b es repetido
+    return a + ' ' + b;
+  }
+  function buildTranscript(results) {
+    var text = '';
+    for (var i = 0; i < results.length; i++) {
+      var t = (results[i][0].transcript || '').trim();
+      if (!t) continue;
+      text = IS_MOBILE ? mergeSpeech(text, t) : (text ? text + ' ' + t : t);
+    }
+    return text;
+  }
+
+  /* Detección de silencio. El AudioContext se crea dentro del toque del usuario (si no,
+     iOS lo deja suspendido); si no queda activo, la grabación funciona como antes. */
+  var audioCtx = null;
+  function primeAudio() {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    try {
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { audioCtx = null; }
+  }
+
+  function watchSilence(stream, onStop) {
+    var w = { active: false, spoke: false, stop: function () {} };
+    if (!audioCtx || audioCtx.state !== 'running') return w;
+    var source, analyser;
+    try {
+      source = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+      source.connect(analyser);
+    } catch (e) { return w; }
+    var buf = new Float32Array(analyser.fftSize), floor = 0.008;
+    var started = Date.now(), lastVoice = started, iv = null;
+    w.active = true;
+    w.stop = function () { clearInterval(iv); try { source.disconnect(); } catch (e) { /* ya desconectado */ } };
+    iv = setInterval(function () {
+      analyser.getFloatTimeDomainData(buf);
+      var sum = 0;
+      for (var i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+      var rms = Math.sqrt(sum / buf.length), now = Date.now();
+      // Umbral relativo al ruido de fondo, para que funcione en salón o en casa.
+      if (rms > Math.max(0.015, floor * 3)) { w.spoke = true; lastVoice = now; }
+      else floor = floor * 0.95 + rms * 0.05;
+      if (w.spoke && now - lastVoice > SILENCE_MS) { w.stop(); onStop(); }
+      else if (!w.spoke && now - started > NO_SPEECH_MS) { w.stop(); onStop(); }
+    }, 100);
+    return w;
+  }
+
   function startSpeech(useLocal) {
     var rec = new SR();
     voice.rec = rec;
@@ -660,15 +735,22 @@
     var base = input.value.trim() ? input.value.replace(/\s+$/, '') + ' ' : '';
     var heard = false;
 
+    // onstart llega antes de que el micrófono capture audio; si la persona habla en ese
+    // instante, la primera palabra se pierde. Se pide esperar hasta onaudiostart.
     rec.onstart = function () {
       setMic('listening');
-      setStatus(useLocal ? 'Escuchando en tu dispositivo… toca para terminar' : 'Escuchando… toca para terminar', true);
+      setStatus('Preparando micrófono…', true);
       voice.timer = setTimeout(stopVoice, MAX_SECONDS * 1000);
     };
+    rec.onaudiostart = function () {
+      setStatus(useLocal ? 'Escuchando en tu dispositivo… habla ahora' : 'Escuchando… habla ahora', true);
+    };
     rec.onresult = function (e) {
-      var text = '';
-      for (var i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
-      if (text.trim()) { heard = true; insertDictation(base, text.trim()); }
+      var text = buildTranscript(e.results);
+      if (text) { heard = true; insertDictation(base, text); }
+      // Sin resultados nuevos durante un rato = la persona dejó de hablar.
+      clearTimeout(voice.silenceTimer);
+      voice.silenceTimer = setTimeout(stopVoice, SILENCE_MS + 500);
     };
     rec.onerror = function (e) {
       if (e.error === 'network' || e.error === 'service-not-allowed' || e.error === 'language-not-supported') {
@@ -680,7 +762,7 @@
       }
     };
     rec.onend = function () {
-      clearTimeout(voice.timer);
+      clearTimeout(voice.timer); clearTimeout(voice.silenceTimer);
       voice.rec = null;
       if (voice.fallback) { voice.fallback = false; startRecorder(true); return; }
       if (heard) { voiceDraft = true; voice.added = true; }
@@ -708,17 +790,25 @@
     navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } })
       .then(function (stream) {
         var mime = pickMime();
-        var recorder = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 64000 } : {});
+        var recorder = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: BITRATE } : { audioBitsPerSecond: BITRATE });
         voice.stream = stream; voice.recorder = recorder; voice.chunks = [];
         recorder.ondataavailable = function (e) { if (e.data && e.data.size) voice.chunks.push(e.data); };
         recorder.onstop = function () {
           clearTimeout(voice.timer);
+          var w = voice.watcher; voice.watcher = null; w.stop();
           stream.getTracks().forEach(function (t) { t.stop(); });
           var type = recorder.mimeType || mime || 'audio/webm';
           var blob = new Blob(voice.chunks, { type: type });
           voice.recorder = null; voice.stream = null;
+          // Si se midió el volumen y nunca hubo voz, no se manda: Whisper inventaría texto.
+          if (w.active && !w.spoke) {
+            setMic('idle');
+            setStatus('No escuché nada. Intenta de nuevo, más cerca del micrófono.');
+            return;
+          }
           uploadAudio(blob, type);
         };
+        voice.watcher = watchSilence(stream, stopVoice);
         recorder.start(250);
         setMic('listening');
         setStatus(isFallback ? 'Grabando (modo alternativo)… toca para terminar' : 'Grabando… toca para terminar', true);
@@ -737,6 +827,7 @@
     var form = new FormData();
     form.append('audio', blob, 'audio');
     form.append('mime', type);
+    form.append('context', 'chat');
     api('/api/transcribe', { body: form })
       .then(function (data) {
         if (data.text) {
@@ -754,15 +845,22 @@
   }
 
   function startVoice() {
+    if (voice.starting) return;
+    voice.starting = true;
     voice.added = false;
-    if (!SR) { startRecorder(false); return; }
+    primeAudio();   // dentro del toque del usuario
+    if (!SR || (IS_MOBILE && voice.pref !== 'local')) { startRecorder(false); return; }
     if (voice.pref !== 'local') { startSpeech(false); return; }
     var ready = voice.local === 'unknown' ? checkLocal() : Promise.resolve();
-    ready.then(function () { startSpeech(voice.local === 'available'); });
+    ready.then(function () {
+      if (voice.local === 'available') startSpeech(true);
+      else if (IS_MOBILE) startRecorder(false);
+      else startSpeech(false);
+    });
   }
 
   function stopVoice() {
-    clearTimeout(voice.timer);
+    clearTimeout(voice.timer); clearTimeout(voice.silenceTimer);
     if (voice.rec) { try { voice.rec.stop(); } catch (e) { /* ya detenido */ } }
     if (voice.recorder && voice.recorder.state === 'recording') voice.recorder.stop();
   }

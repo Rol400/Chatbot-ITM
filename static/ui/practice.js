@@ -98,6 +98,8 @@
     var LIMIT = 60, taps = 0, tick = null, transcript = $('m-transcript');
     var voice = window.Voice.create({
       textarea: transcript,
+      context: 'practice',
+      silenceMs: 0,   // el ejercicio pide hacer pausas: no se corta por silencio
       onState: function (st) {
         var mic = $('m-mic');
         mic.classList.toggle('is-rec', st === 'listening');

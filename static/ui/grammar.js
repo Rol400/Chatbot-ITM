@@ -284,6 +284,7 @@
   /* ---------- Dictado ---------- */
   var voice = window.Voice.create({
     textarea: textarea,
+    context: 'grammar',
     onState: function (st) {
       var btn = $('g-mic');
       btn.textContent = '';

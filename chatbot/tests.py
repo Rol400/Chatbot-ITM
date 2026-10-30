@@ -252,6 +252,67 @@ class InterviewTests(ApiTestCase):
         with mock.patch.object(llm, "transcribe", return_value="hola mundo"):
             self.assertEqual(self.client.post("/api/transcribe", {"audio": audio}).json(), {"text": "hola mundo"})
 
+    def audio(self):
+        return SimpleUploadedFile("a.webm", b"x" * 5000, content_type="audio/webm")
+
+    def test_transcribe_prompt_depends_on_context(self):
+        self.start_interview()
+        with mock.patch.object(llm, "transcribe", return_value="ok") as fake:
+            self.client.post("/api/transcribe", {"audio": self.audio(), "context": "interview"})
+            prompt = fake.call_args.kwargs["prompt"]
+            self.assertIn("Desarrollador web", prompt)
+            self.assertIn("este", prompt)          # conserva muletillas
+            self.assertIn("Python", prompt)        # vocabulario técnico
+            self.client.post("/api/transcribe", {"audio": self.audio(), "context": "grammar"})
+            self.assertNotIn("mmm", fake.call_args.kwargs["prompt"])
+
+    @override_settings(TRANSCRIBE_PER_HOUR=2, MESSAGES_PER_MINUTE=100)
+    def test_transcribe_has_its_own_hourly_limit(self):
+        with mock.patch.object(llm, "transcribe", return_value="ok"):
+            codes = [self.client.post("/api/transcribe", {"audio": self.audio()}).status_code for _ in range(3)]
+        self.assertEqual(codes, [200, 200, 429])
+
+    def test_transcribe_quota_message(self):
+        with mock.patch.object(llm, "transcribe", side_effect=llm.RateLimited("sin cuota")):
+            response = self.client.post("/api/transcribe", {"audio": self.audio()})
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("límite", response.json()["error"])
+
+
+class TranscriptCleanupTests(TestCase):
+    def test_removes_whisper_hallucinations(self):
+        self.assertEqual(llm.clean_transcript("Subtítulos realizados por la comunidad de Amara.org"), "")
+        self.assertEqual(llm.clean_transcript("¡Gracias por ver el video!"), "")
+        self.assertEqual(llm.clean_transcript("[Música]"), "")
+        self.assertEqual(llm.clean_transcript("Hola, soy Ana. Gracias por ver el video."), "Hola, soy Ana.")
+        self.assertEqual(llm.clean_transcript("Muchas gracias por la oportunidad."), "Muchas gracias por la oportunidad.")
+
+    def test_drops_segments_that_are_not_speech(self):
+        result = {"text": "Hola. Gracias.", "segments": [
+            {"text": " Hola, me llamo Ana.", "no_speech_prob": 0.01, "avg_logprob": -0.2, "compression_ratio": 1.1},
+            {"text": " Gracias.", "no_speech_prob": 0.9, "avg_logprob": -1.4, "compression_ratio": 0.8},
+            {"text": " sí sí sí sí sí sí sí sí", "no_speech_prob": 0.1, "avg_logprob": -0.3, "compression_ratio": 3.5},
+        ]}
+        self.assertEqual(llm._transcript_text(result), "Hola, me llamo Ana.")
+
+    @override_settings(GROQ_API_KEY="x", WHISPER_MODELS=["turbo", "grande"])
+    def test_falls_back_to_next_whisper_model(self):
+        import groq
+        import httpx
+
+        def create(**kwargs):
+            if kwargs["model"] == "turbo":
+                raise groq.RateLimitError("sin cuota", response=httpx.Response(429, request=httpx.Request("POST", "http://x")),
+                                          body=None)
+            return {"text": "hola", "segments": [{"text": "hola", "no_speech_prob": 0, "avg_logprob": -0.1}]}
+
+        with mock.patch("groq.Groq") as client:
+            client.return_value.audio.transcriptions.create.side_effect = create
+            self.assertEqual(llm.transcribe(b"x", "a.webm", "audio/webm"), "hola")
+            client.return_value.audio.transcriptions.create.side_effect = lambda **k: create(model="turbo")
+            with self.assertRaises(llm.RateLimited):
+                llm.transcribe(b"x", "a.webm", "audio/webm")
+
 
 class GrammarTests(ApiTestCase):
     def test_check_locates_errors_and_scores(self):
